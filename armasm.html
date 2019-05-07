@@ -201,7 +201,7 @@ STM Rn, {regs}	1	1	0	0	0	Rn			R7	R6	R5	R4	R3	R2	R1	R0	1+N	-
 <script>
 makeTable("t1479c", function() {/*
 その他	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	cycles	flags
-NOP (=0)	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	-
+NOP (=#46C0)	0	1	0	0	0	1	1	0	1	1	0	0	0	0	0	0	1	-
 CPSID (=#B672)	1	0	1	1	0	1	1	0	0	1	1	1	0	0	1	0	1	-
 CPSIE (=#B662)	1	0	1	1	0	1	1	0	0	1	1	0	0	0	1	0	1	-
 WFI (=#BF30)	1	0	1	1	1	1	1	1	0	0	1	1	0	0	0	0	2	-
@@ -209,7 +209,7 @@ BKPT u8	1	0	1	1	1	1	1	0	u8								※	-
 SVC u8	1	1	0	1	1	1	1	1	u8								※	-
 */})
 </script>
-※CPSID:割込禁止、CPSIE:割込許可、WFI:割込待ち、NOP:なにもしない(no operation) R0=R0&lt;&lt;0<br>
+※CPSID:割込禁止、CPSIE:割込許可、WFI:割込待ち、NOP:なにもしない(no operation) R8=R8<br>
 ※BKPT,SVCのサイクル数は設定による<br>
 
 <table id="tunknown" class=tarmasm></table>

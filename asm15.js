@@ -235,7 +235,7 @@ var cmdlist = [
 ["if cond goto n",0xd000,cond(8,0),n(8,0,-2,1)],
 ["if ! cond goto n",0xd000,cond(8,1),n(8,0,-2,1)],
 ["if al goto n",0xe000,n(11,0,-2,1)], // always jump == unconditional jump
-["if ! al goto n",0, function(){return 0;}], // never jump == NOP
+["if ! al goto n",0x46c0, function(){return 0;}], // never jump == NOP
 ["goto reg",0x4700,b(3,3)],
 ["goto h",0x4740,b(3,3)],
 ["call reg",0x4780,b(3,3)], // 追加
@@ -333,7 +333,7 @@ var cmdlist = [
 ["wfi",0xbf30],
 ["bkpt n",0xbe00,bu(8,0)],
 ["svc n",0xdf00,bu(8,0)],
-["nop",0],
+["nop",0x46c0],
 
 ];
 
