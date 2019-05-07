@@ -31,7 +31,8 @@ var token_dict = {
 "^":"\\^",
 "not":"(?:\\~|not)",
 
-"cond":"(eq|ne|cs|cc|mi|pl|vs|vc|hi|ls|ge|lt|gt|le|al)",
+"cond":"(eq|ne|cs|cc|mi|pl|vs|vc|hi|ls|ge|lt|gt|le)",
+"al":"al",
 
 "*":"\\*",
 "if":"if",
@@ -195,7 +196,7 @@ function bl(bits,s,ofs){
 }
 function cond(ofs, invert) {
 	var f = function(d, pc) {
-		var n = "eq|ne|cs|cc|mi|pl|vs|vc|hi|ls|ge|lt|gt|le|al".indexOf(d) / 3;
+		var n = "eq|ne|cs|cc|mi|pl|vs|vc|hi|ls|ge|lt|gt|le".indexOf(d) / 3;
 		if (invert)
 			n ^= 1;
 		return n << ofs;
@@ -233,6 +234,8 @@ var cmdlist = [
 ["if ! 0 goto n",0xd100,n(8,0,-2,1)],
 ["if cond goto n",0xd000,cond(8,0),n(8,0,-2,1)],
 ["if ! cond goto n",0xd000,cond(8,1),n(8,0,-2,1)],
+["if al goto n",0xe000,n(11,0,-2,1)], // always jump == unconditional jump
+["if ! al goto n",0, function(){return 0;}], // never jump == NOP
 ["goto reg",0x4700,b(3,3)],
 ["goto h",0x4740,b(3,3)],
 ["call reg",0x4780,b(3,3)], // 追加
