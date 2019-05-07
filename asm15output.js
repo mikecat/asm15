@@ -45,7 +45,7 @@ function m2b16(lines,outlist){
 			linehex.push("#"+p1);
 		}
 		if(linehex.length>=8){
-			lines2.push(""+nln.toString(10)+" poke #"+lineadr.toString(16)+
+			lines2.push(""+nln.toString(10)+" POKE#"+lineadr.toString(16)+
 			","+linehex.join(","));
 			linehex=[];
 			nln+=10;
@@ -53,7 +53,7 @@ function m2b16(lines,outlist){
 		}
 	}
 	if(linehex.length>0){
-		lines2.push(""+nln.toString(10)+" poke #"+lineadr.toString(16)+
+		lines2.push(""+nln.toString(10)+" POKE#"+lineadr.toString(16)+
 		","+linehex.join(","));
 	}
 	lines2.push("");
