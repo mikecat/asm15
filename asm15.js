@@ -55,6 +55,8 @@ var token_dict = {
 "cpsie":"cpsie",
 "nop":"nop",
 "wfi":"wfi",
+"bkpt":"bkpt",
+"svc":"svc",
 ",":"\,",
 
 "bic":"bic",
@@ -326,6 +328,8 @@ var cmdlist = [
 ["cpsid",0xB672],
 ["cpsie",0xB662],
 ["wfi",0xbf30],
+["bkpt n",0xbe00,bu(8,0)],
+["svc n",0xdf00,bu(8,0)],
 ["nop",0],
 
 ];
