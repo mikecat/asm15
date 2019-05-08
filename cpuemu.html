@@ -86,7 +86,7 @@ var CPU = function() {
 		},
 	};
 	this.step = function() {
-		var checkmem = document.getElementById("uninitialized_ram").value === "halt";
+		var checkmem = get("uninitialized_ram").value === "halt";
 		var iaddr = this.r[15];
 		if (checkmem && !this.mem.check(iaddr, 2)) {
 			alert("read uninitialized RAM as instruction #" + iaddr.toString(16));
@@ -206,7 +206,7 @@ var CPU = function() {
 //			alert("ret");
 			return 0;
 		} else {
-			if (document.getElementById("unsupported_op").value === "halt") {
+			if (get("unsupported_op").value === "halt") {
 				var inst = code.toString(2);
 				while (inst.length < 16) inst = "0" + inst;
 				alert("unsupported instruction " + inst + " at #" + iaddr.toString(16));
