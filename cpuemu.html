@@ -225,6 +225,28 @@ window.onload = function() {
 	for (var i = 0; i < 16; i++) {
 		var r = create("div");
 		r.textContent = "R" + i + ": ";
+		r.ondblclick = (function(idx) {
+			return function() {
+				var rawRes = prompt("R" + idx + "の値を入力", cpu.r[idx]);
+				if (rawRes !== null) {
+					rawRes = rawRes.replace(/\s+/g, "");
+					var res;
+					if (rawRes.substr(0, 1) == '`') {
+						res = parseInt(rawRes.substr(1), 2);
+					} else if (rawRes.substr(0, 1) == '#') {
+						res = parseInt(rawRes.substr(1), 16);
+					} else {
+						res = parseInt(rawRes);
+					}
+					if (!isNaN(res)) {
+						res = res & 0xffffffff;
+						if (res < 0) res += 0x100000000;
+						cpu.r[idx] = res;
+						showRegs();
+					}
+				}
+			};
+		})(i);
 		get("regs").appendChild(r);
 	}
 	var r = create("div");
