@@ -270,6 +270,7 @@ window.onload = function() {
 		cpu.r[15] = 0;
 		cpu.mem.ram = [];
 		autoflg = false;
+		get("auto").textContent = "START";
 		
 		var s = get("prog").value.split("\n");
 		var n = 0;
@@ -294,9 +295,11 @@ window.onload = function() {
 	var auto = function() {
 		if (autoflg) {
 			autoflg = false;
+			get("auto").textContent = "START";
 			return;
 		} else {
 			autoflg = true;
+			get("auto").textContent = "STOP";
 		}
 		var autostep = function() {
 			if (!autoflg)
@@ -305,6 +308,7 @@ window.onload = function() {
 				setTimeout(autostep, get("autostep_interval").value);
 			} else {
 				autoflg = false;
+				get("auto").textContent = "START";
 			}
 			showRegs();
 		};
@@ -314,6 +318,7 @@ window.onload = function() {
 	get("reset").onclick = reset;
 	get("step").onclick = function() {
 		autoflg = false;
+		get("auto").textContent = "START";
 		cpu.step();
 		showRegs();
 	};
