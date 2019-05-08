@@ -268,6 +268,7 @@ window.onload = function() {
 		cpu.reset();
 		cpu.r[1] = 0x100;
 		cpu.r[15] = 0;
+		cpu.mem.ram = [];
 		autoflg = false;
 		
 		var s = get("prog").value.split("\n");
