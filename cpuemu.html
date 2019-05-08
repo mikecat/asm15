@@ -79,7 +79,8 @@ var CPU = function() {
 		},
 	};
 	this.step = function() {
-		var code = this.mem.get16(this.r[15]);
+		var iaddr = this.r[15];
+		var code = this.mem.get16(iaddr);
 //		this.code = code;
 		this.r[15] += 2;
 //		console.log(code.toString(2));
@@ -166,6 +167,13 @@ var CPU = function() {
 		} else if (chk("0100011101110000")) { // ret
 //			alert("ret");
 			return 0;
+		} else {
+			if (document.getElementById("unsupported_op").value === "halt") {
+				var inst = code.toString(2);
+				while (inst.length < 16) inst = "0" + inst;
+				alert("unsupported instruction " + inst + " at #" + iaddr.toString(16));
+				return 0;
+			}
 		}
 //		dump(this.r);
 		return 1;
@@ -260,6 +268,13 @@ window.onload = function() {
 }
 #regs {
 	height: 400px;
+	width: 18em;
+	display: inline-block;
+	font-size: 14px;
+	vertical-align: top;
+}
+#config {
+	height: 400px;
 	display: inline-block;
 	font-size: 14px;
 	vertical-align: top;
@@ -287,6 +302,12 @@ a {
 0100011101110000
 </textarea>
 <div id=regs></div>
+<div id=config>
+未サポートの命令<select id="unsupported_op">
+<option value="ignore">を無視</option>
+<option value="halt" selected="selected">で停止</option>
+</select>
+</div>
 <br>
 <button id=auto>START</button>
 <button id=step>STEP</button>
