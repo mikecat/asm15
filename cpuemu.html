@@ -63,19 +63,20 @@ var CPU = function() {
 	this.mem = {
 		ram: [],
 		get: function(ad) {
+			if (isNaN(this.ram[ad])) return 0;
 			return this.ram[ad];
 		},
 		set: function(ad, n) {
 			this.ram[ad] = n;
 		},
 		get16: function(ad) {
-			var n = this.ram[ad++];
-			n |= this.ram[ad] << 8;
+			var n = this.get(ad);
+			n |= this.get(ad + 1) << 8;
 			return n;
 		},
 		set16: function(ad, n) {
-			this.ram[ad++] = n & 0xff;
-			this.ram[ad] = (n >> 8) & 0xff;
+			this.set(ad, n & 0xff);
+			this.set(ad + 1, (n >> 8) & 0xff);
 		},
 	};
 	this.step = function() {
