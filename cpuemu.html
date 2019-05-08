@@ -138,9 +138,9 @@ var CPU = function() {
 			this.r[getu(0, 3)] = this.mem.get(addr);
 		} else if (chk("0101010")) { // [Rn + Rm] = Rd
 			this.mem.set(this.r[getu(3, 3)] + this.r[getu(6, 3)], this.r[getu(0, 3)]);
-		} else if (chk("00110")) { // Rd = Rd + u8
+		} else if (chk("00110")) { // Rd += u8
 			this.r[getu(8, 3)] = this.setflg(this.r[getu(8, 3)] + getu(0, 8));
-		} else if (chk("00111")) { // Rd = Rd - u8
+		} else if (chk("00111")) { // Rd -= u8
 			this.r[getu(8, 3)] = this.setflg(this.r[getu(8, 3)] - getu(0, 8));
 		} else if (chk("00000")) { // Rd = Rm << u5
 			this.r[getu(0, 3)] = this.setflg(this.r[getu(3, 3)] << getu(6, 5));
