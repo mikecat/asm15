@@ -302,7 +302,7 @@ window.onload = function() {
 			if (!autoflg)
 				return;
 			if (cpu.step()) {
-				setTimeout(autostep, 100);
+				setTimeout(autostep, get("autostep_interval").value);
 			} else {
 				autoflg = false;
 			}
@@ -379,6 +379,10 @@ a {
 未初期化のRAMを読んだら<select id="uninitialized_ram">
 <option value="zero">0とみなす</option>
 <option value="halt" selected="selected">停止する</option>
+</select><br>
+自動実行の速さは<select id="autostep_interval">
+<option value="10">高速</option>
+<option value="100" selected="selected">通常</option>
 </select>
 </div>
 <div id='credit'>
