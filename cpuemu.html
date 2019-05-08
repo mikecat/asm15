@@ -119,25 +119,25 @@ var CPU = function() {
 		if (chk("00100")) { // Rd = u8
 			this.r[getu(8, 3)] = this.setflg(getu(0, 8));
 		} else if (chk("0100011000")) { // Rd = Rm
-			this.r[getu(0, 3)] = this.setflg(this.r[getu(3, 3)]);
+			this.r[getu(0, 3)] = this.r[getu(3, 3)];
 		} else if (chk("01111")) { // Rd = [Rn + u5]
 			var addr = this.r[getu(3, 3)] + getu(6, 5);
 			if (checkmem && !this.mem.check(addr, 1)) {
 				alert("read uninitialized RAM at #" + iaddr.toString(16));
 				return 0;
 			}
-			this.r[getu(0, 3)] = this.setflg(this.mem.get(addr));
+			this.r[getu(0, 3)] = this.mem.get(addr);
 		} else if (chk("01110")) { // [Rn + u5] = Rd
-			this.mem.set(this.r[getu(3, 3)] + getu(6, 5), this.setflg(this.r[getu(0, 3)]));
+			this.mem.set(this.r[getu(3, 3)] + getu(6, 5), this.r[getu(0, 3)]);
 		} else if (chk("0101110")) { // Rd = [Rn + Rm]
 			var addr = this.r[getu(3, 3)] + this.r[getu(6, 3)];
 			if (checkmem && !this.mem.check(addr, 1)) {
 				alert("read uninitialized RAM at #" + iaddr.toString(16));
 				return 0;
 			}
-			this.r[getu(0, 3)] = this.setflg(this.mem.get(addr));
+			this.r[getu(0, 3)] = this.mem.get(addr);
 		} else if (chk("0101010")) { // [Rn + Rm] = Rd
-			this.mem.set(this.r[getu(3, 3)] + this.r[getu(6, 3)], this.setflg(this.r[getu(0, 3)]));
+			this.mem.set(this.r[getu(3, 3)] + this.r[getu(6, 3)], this.r[getu(0, 3)]);
 		} else if (chk("00110")) { // Rd = Rd + u8
 			this.r[getu(8, 3)] = this.setflg(this.r[getu(8, 3)] + getu(0, 8));
 		} else if (chk("00111")) { // Rd = Rd - u8
