@@ -157,12 +157,12 @@ var CPU = function() {
 			this.setflg(this.r[getu(0, 3)] & this.r[getu(3, 3)]);
 		} else if (chk("11010000")) { // IF 0 GOTO n8 << 1
 			if (this.status.z)
-				this.r[15] = (getn(0, 8) + 2) << 1;
+				this.r[15] += (getn(0, 8) + 1) << 1; // not +2 because PC+=2 is done already
 		} else if (chk("11010001")) { // IF !0 GOTO n8 << 1
 			if (!this.status.z)
-				this.r[15] += (getn(0, 8) + 2) << 1;
+				this.r[15] += (getn(0, 8) + 1) << 1; // not +2 because PC+=2 is done already
 		} else if (chk("11100")) { // GOTO n11 << 1
-			this.r[15] += (getn(0, 11) + 2) << 1;
+			this.r[15] += (getn(0, 11) + 1) << 1; // not +2 because PC+=2 is done already
 		} else if (chk("0100011101110000")) { // ret
 //			alert("ret");
 			return 0;
