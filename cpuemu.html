@@ -232,7 +232,11 @@ window.onload = function() {
 	var showRegs = function() {
 		var rs = get("regs").childNodes;
 		for (var i = 0; i < 16; i++) {
-			rs[i].textContent = "R" + i + ": " + cpu.r[i] + " #" + cpu.r[i].toString(16);
+			var negative = "";
+			if (cpu.r[i] & 0x80000000) {
+				negative = " (" + (cpu.r[i] - 0x100000000) + ")";
+			}
+			rs[i].textContent = "R" + i + ": " + cpu.r[i] + negative + " #" + cpu.r[i].toString(16);
 		}
 		rs[16].textContent = "Zero-flg: " + cpu.status.z;
 	};
@@ -306,16 +310,14 @@ window.onload = function() {
 }
 #regs {
 	height: 400px;
-	width: 18em;
 	display: inline-block;
 	font-size: 14px;
 	vertical-align: top;
 }
 #config {
-	height: 400px;
-	display: inline-block;
+	margin-top: 1em;
+	margin-bottom: 1em;
 	font-size: 14px;
-	vertical-align: top;
 }
 #main {
 	padding: .5em;
@@ -340,7 +342,12 @@ a {
 0100011101110000
 </textarea>
 <div id=regs></div>
-<div id=config>
+<br>
+<button id=auto>START</button>
+<button id=step>STEP</button>
+<button id=reset>RESET</button>
+</div>
+<div id="config">
 未サポートの命令<select id="unsupported_op">
 <option value="ignore">を無視</option>
 <option value="halt" selected="selected">で停止</option>
@@ -349,11 +356,6 @@ a {
 <option value="zero">0とみなす</option>
 <option value="halt" selected="selected">停止する</option>
 </select>
-</div>
-<br>
-<button id=auto>START</button>
-<button id=step>STEP</button>
-<button id=reset>RESET</button>
 </div>
 <div id='credit'>
 cpuemu a1 (for <a href=http://ichigojam.net/>IchigoJam</a>)<br>
