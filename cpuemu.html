@@ -89,7 +89,7 @@ var CPU = function() {
 		var checkmem = get("uninitialized_ram").value === "halt";
 		var iaddr = this.r[15];
 		if (checkmem && !this.mem.check(iaddr, 2)) {
-			alert("read uninitialized RAM as instruction #" + iaddr.toString(16));
+			alert("read instruction from uninitialized RAM #" + iaddr.toString(16));
 			return 0;
 		}
 		var code = this.mem.get16(iaddr);
@@ -98,135 +98,138 @@ var CPU = function() {
 		if (this.r[15] >= 0x100000000) this.r[15] -= 0x100000000;
 //		console.log(code.toString(2));
 //		alert(code.toString(2));
-		var chk = function(bin) {
-			var n = parseInt(bin, 2);
-			var c = code >> (16 - bin.length);
-			return c == n;
-		};
-		var getu = function(start, n) {
-			return (code >> start) & ((1 << n) - 1);
-		};
-		var getn = function(start, n) {
-			var res = (code >> start) & ((1 << n) - 1);
-			if ((res >> (n - 1)) != 0)
-				return res - (1 << n);
-			return res;
-		};
-		var norm = function(n) {
-			var v = 0x100000000;
-			while (n >= v) n -= v;
-			while (n < 0) n += v;
-			return n;
-		};
-		this.setflg = function(n) {
-			this.status.z = n == 0;
-			this.status.n = (n >> 31) != 0;
-			return n;
-		};
-		if (chk("00100")) { // Rd = u8
-			this.r[getu(8, 3)] = this.setflg(getu(0, 8));
-		} else if (chk("01000110")) { // Rd = Rm
-			var dstidx = getu(0, 3) | (getu(7, 1) << 3);
-			var srcidx = getu(3, 4);
-			var srcvalue;
-			if (srcidx == 15) { // PC
-				srcvalue = norm(this.r[srcidx] + 2); // PC + 4 = (PC + 2) + 2
-			} else {
-				srcvalue = this.r[srcidx];
-			}
-			if (dstidx == 15) { // PC
-				this.r[dstidx] = norm(srcvalue & 0xfffffffe);
-			} else {
-				this.r[dstidx] = srcvalue;
-			}
-		} else if (chk("00110")) { // Rd += u8
-			this.r[getu(8, 3)] = this.setflg(norm(this.r[getu(8, 3)] + getu(0, 8)));
-		} else if (chk("00111")) { // Rd -= u8
-			this.r[getu(8, 3)] = this.setflg(norm(this.r[getu(8, 3)] - getu(0, 8)));
-		} else if (chk("10100")) { // Rd = PC + u8
-			this.r[getu(8, 3)] = norm(this.r[15] + 2 + (getu(0, 8) << 2));
-		} else if (chk("0001110")) { // Rd = Rn + u3
-			this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(3, 3)] + getu(6, 3)));
-		} else if (chk("0001111")) { // Rd = Rn - u3
-			this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(3, 3)] - getu(6, 3)));
-		} else if (chk("0001100")) { // Rd = Rn + Rm
-			this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]));
-		} else if (chk("0001101")) { // Rd = Rn - Rm
-			this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(3, 3)] - this.r[getu(6, 3)]));
-		} else if (chk("0100001001")) { // Rd = -Rm
-			this.r[getu(0, 3)] = this.setflg(norm(-this.r[getu(3, 3)]));
-		} else if (chk("0100001101")) { // Rd *= Rm
-			// don't do this.r[getu(0, 3)] * this.r[getu(3, 3)], or the result will be inaccurate
-			var ret = 0;
-			var val = this.r[getu(0, 3)];
-			var mult = this.r[getu(3, 3)];
-			for (var i = 0; i < 32; i++) {
-				if (mult & 1) ret = norm(ret + val);
-				val = norm(val + val);
-				mult >>>= 1;
-			}
-			this.r[getu(0, 3)] = this.setflg(ret);
-		} else if (chk("00000")) { // Rd = Rm << u5
-			this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(3, 3)] << getu(6, 5)));
-		} else if (chk("00001")) { // Rd = Rm >> u5
-			this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(3, 3)] >>> getu(6, 5)));
-		} else if (chk("0100000010")) { // Rd <<= Rs
-			this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] << this.r[getu(3, 3)]));
-		} else if (chk("0100000011")) { // Rd >>= Rs
-			this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] >>> this.r[getu(3, 3)]));
-		} else if (chk("0100001111")) { // Rd = ~Rm
-			this.r[getu(0, 3)] = this.setflg(norm(~this.r[getu(3, 3)]));
-		} else if (chk("0100000000")) { // Rd &= Rm
-			this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] & this.r[getu(3, 3)]));
-		} else if (chk("0100001100")) { // Rd |= Rm
-			this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] | this.r[getu(3, 3)]));
-		} else if (chk("0100000001")) { // Rd ^= Rm
-			this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] ^ this.r[getu(3, 3)]));
-		} else if (chk("01111")) { // Rd = [Rn + u5]
-			var addr = norm(this.r[getu(3, 3)] + getu(6, 5));
-			if (checkmem && !this.mem.check(addr, 1)) {
-				alert("read uninitialized RAM at #" + iaddr.toString(16));
+		try {
+			var chk = function(bin) {
+				var n = parseInt(bin, 2);
+				var c = code >> (16 - bin.length);
+				return c == n;
+			};
+			var getu = function(start, n) {
+				return (code >> start) & ((1 << n) - 1);
+			};
+			var getn = function(start, n) {
+				var res = (code >> start) & ((1 << n) - 1);
+				if ((res >> (n - 1)) != 0)
+					return res - (1 << n);
+				return res;
+			};
+			var norm = function(n) {
+				var v = 0x100000000;
+				while (n >= v) n -= v;
+				while (n < 0) n += v;
+				return n;
+			};
+			this.setflg = function(n) {
+				this.status.z = n == 0;
+				this.status.n = (n >> 31) != 0;
+				return n;
+			};
+			if (chk("00100")) { // Rd = u8
+				this.r[getu(8, 3)] = this.setflg(getu(0, 8));
+			} else if (chk("01000110")) { // Rd = Rm
+				var dstidx = getu(0, 3) | (getu(7, 1) << 3);
+				var srcidx = getu(3, 4);
+				var srcvalue;
+				if (srcidx == 15) { // PC
+					srcvalue = norm(this.r[srcidx] + 2); // PC + 4 = (PC + 2) + 2
+				} else {
+					srcvalue = this.r[srcidx];
+				}
+				if (dstidx == 15) { // PC
+					this.r[dstidx] = norm(srcvalue & 0xfffffffe);
+				} else {
+					this.r[dstidx] = srcvalue;
+				}
+			} else if (chk("00110")) { // Rd += u8
+				this.r[getu(8, 3)] = this.setflg(norm(this.r[getu(8, 3)] + getu(0, 8)));
+			} else if (chk("00111")) { // Rd -= u8
+				this.r[getu(8, 3)] = this.setflg(norm(this.r[getu(8, 3)] - getu(0, 8)));
+			} else if (chk("10100")) { // Rd = PC + u8
+				this.r[getu(8, 3)] = norm(this.r[15] + 2 + (getu(0, 8) << 2));
+			} else if (chk("0001110")) { // Rd = Rn + u3
+				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(3, 3)] + getu(6, 3)));
+			} else if (chk("0001111")) { // Rd = Rn - u3
+				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(3, 3)] - getu(6, 3)));
+			} else if (chk("0001100")) { // Rd = Rn + Rm
+				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]));
+			} else if (chk("0001101")) { // Rd = Rn - Rm
+				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(3, 3)] - this.r[getu(6, 3)]));
+			} else if (chk("0100001001")) { // Rd = -Rm
+				this.r[getu(0, 3)] = this.setflg(norm(-this.r[getu(3, 3)]));
+			} else if (chk("0100001101")) { // Rd *= Rm
+				// don't do this.r[getu(0, 3)] * this.r[getu(3, 3)], or the result will be inaccurate
+				var ret = 0;
+				var val = this.r[getu(0, 3)];
+				var mult = this.r[getu(3, 3)];
+				for (var i = 0; i < 32; i++) {
+					if (mult & 1) ret = norm(ret + val);
+					val = norm(val + val);
+					mult >>>= 1;
+				}
+				this.r[getu(0, 3)] = this.setflg(ret);
+			} else if (chk("00000")) { // Rd = Rm << u5
+				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(3, 3)] << getu(6, 5)));
+			} else if (chk("00001")) { // Rd = Rm >> u5
+				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(3, 3)] >>> getu(6, 5)));
+			} else if (chk("0100000010")) { // Rd <<= Rs
+				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] << this.r[getu(3, 3)]));
+			} else if (chk("0100000011")) { // Rd >>= Rs
+				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] >>> this.r[getu(3, 3)]));
+			} else if (chk("0100001111")) { // Rd = ~Rm
+				this.r[getu(0, 3)] = this.setflg(norm(~this.r[getu(3, 3)]));
+			} else if (chk("0100000000")) { // Rd &= Rm
+				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] & this.r[getu(3, 3)]));
+			} else if (chk("0100001100")) { // Rd |= Rm
+				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] | this.r[getu(3, 3)]));
+			} else if (chk("0100000001")) { // Rd ^= Rm
+				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] ^ this.r[getu(3, 3)]));
+			} else if (chk("01111")) { // Rd = [Rn + u5]
+				var addr = norm(this.r[getu(3, 3)] + getu(6, 5));
+				if (checkmem && !this.mem.check(addr, 1)) {
+					throw "read byte from uninitialized RAM #" + addr.toString(16);
+				}
+				this.r[getu(0, 3)] = this.mem.get(addr);
+			} else if (chk("0101110")) { // Rd = [Rn + Rm]
+				var addr = norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]);
+				if (checkmem && !this.mem.check(addr, 1)) {
+					throw "read byte from uninitialized RAM #" + addr.toString(16);
+				}
+				this.r[getu(0, 3)] = this.mem.get(addr);
+			} else if (chk("01110")) { // [Rn + u5] = Rd
+				this.mem.set(norm(this.r[getu(3, 3)] + getu(6, 5)), this.r[getu(0, 3)]);
+			} else if (chk("0101010")) { // [Rn + Rm] = Rd
+				this.mem.set(norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]), this.r[getu(0, 3)]);
+			} else if (chk("00101")) { // Rn - u8
+				this.setflg(norm(this.r[getu(8, 3)] - getu(0, 8)));
+			} else if (chk("0100001010")) { // Rn - Rm
+				this.setflg(norm(this.r[getu(0, 3)] - this.r[getu(3, 3)]));
+			} else if (chk("0100001000")) { // Rn & Rm
+				this.setflg(norm(this.r[getu(0, 3)] & this.r[getu(3, 3)]));
+			} else if (chk("11010000")) { // IF 0 GOTO n8
+				if (this.status.z) // not +2 because PC+=2 is done already
+					this.r[15] = norm(this.r[15] + ((getn(0, 8) + 1) << 1));
+			} else if (chk("11010001")) { // IF !0 GOTO n8
+				if (!this.status.z) // not +2 because PC+=2 is done already
+					this.r[15] = norm(this.r[15] + ((getn(0, 8) + 1) << 1));
+			} else if (chk("11100")) { // GOTO n11
+				// not +2 because PC+=2 is done already
+				this.r[15] = norm(this.r[15] + ((getn(0, 11) + 1) << 1));
+			} else if (chk("0100011101110000")) { // RET
+//				alert("ret");
 				return 0;
+			} else if (chk("0100001110")) { // BIC Rd, Rm (Rd &= ~Rm)
+				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] & ~this.r[getu(3, 3)]));
+			} else {
+				if (get("unsupported_op").value === "halt") {
+					throw "unsupported instruction";
+				}
 			}
-			this.r[getu(0, 3)] = this.mem.get(addr);
-		} else if (chk("0101110")) { // Rd = [Rn + Rm]
-			var addr = norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]);
-			if (checkmem && !this.mem.check(addr, 1)) {
-				alert("read uninitialized RAM at #" + iaddr.toString(16));
-				return 0;
-			}
-			this.r[getu(0, 3)] = this.mem.get(addr);
-		} else if (chk("01110")) { // [Rn + u5] = Rd
-			this.mem.set(norm(this.r[getu(3, 3)] + getu(6, 5)), this.r[getu(0, 3)]);
-		} else if (chk("0101010")) { // [Rn + Rm] = Rd
-			this.mem.set(norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]), this.r[getu(0, 3)]);
-		} else if (chk("00101")) { // Rn - u8
-			this.setflg(norm(this.r[getu(8, 3)] - getu(0, 8)));
-		} else if (chk("0100001010")) { // Rn - Rm
-			this.setflg(norm(this.r[getu(0, 3)] - this.r[getu(3, 3)]));
-		} else if (chk("0100001000")) { // Rn & Rm
-			this.setflg(norm(this.r[getu(0, 3)] & this.r[getu(3, 3)]));
-		} else if (chk("11010000")) { // IF 0 GOTO n8
-			if (this.status.z) // not +2 because PC+=2 is done already
-				this.r[15] = norm(this.r[15] + ((getn(0, 8) + 1) << 1));
-		} else if (chk("11010001")) { // IF !0 GOTO n8
-			if (!this.status.z) // not +2 because PC+=2 is done already
-				this.r[15] = norm(this.r[15] + ((getn(0, 8) + 1) << 1));
-		} else if (chk("11100")) { // GOTO n11
-			// not +2 because PC+=2 is done already
-			this.r[15] = norm(this.r[15] + ((getn(0, 11) + 1) << 1));
-		} else if (chk("0100011101110000")) { // RET
-//			alert("ret");
+		} catch(e) {
+			var inst = code.toString(2);
+			while (inst.length < 16) inst = "0" + inst;
+			alert("" + e + "\n\ninstruction address: #" + iaddr.toString(16) +
+				"\ninstruction: " + inst);
 			return 0;
-		} else if (chk("0100001110")) { // BIC Rd, Rm (Rd &= ~Rm)
-			this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] & ~this.r[getu(3, 3)]));
-		} else {
-			if (get("unsupported_op").value === "halt") {
-				var inst = code.toString(2);
-				while (inst.length < 16) inst = "0" + inst;
-				alert("unsupported instruction " + inst + " at #" + iaddr.toString(16));
-				return 0;
-			}
 		}
 //		dump(this.r);
 		return 1;
