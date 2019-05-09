@@ -75,8 +75,8 @@ Rd = -Rm	0	1	0	0	0	0	1	0	0	1	Rm			Rd			1	N Z C V
 Rd *= Rm	0	1	0	0	0	0	1	1	0	1	Rm			Rd			1	N Z
 Rd = Rm &lt;&lt; u5	0	0	0	0	0	u5					Rm			Rd			1	N Z C
 Rd = Rm &gt;&gt; u5	0	0	0	0	1	u5					Rm			Rd			1	N Z C
-Rd &lt;&lt;= Rm	0	1	0	0	0	0	0	0	1	0	Rm			Rd			1	N Z C
-Rd &gt;&gt;= Rm	0	1	0	0	0	0	0	0	1	1	Rm			Rd			1	N Z C
+Rd &lt;&lt;= Rs	0	1	0	0	0	0	0	0	1	0	Rs			Rd			1	N Z C
+Rd &gt;&gt;= Rs	0	1	0	0	0	0	0	0	1	1	Rs			Rd			1	N Z C
 Rd = ~Rm	0	1	0	0	0	0	1	1	1	1	Rm			Rd			1	N Z
 Rd &amp;= Rm	0	1	0	0	0	0	0	0	0	0	Rm			Rd			1	N Z
 Rd |= Rm	0	1	0	0	0	0	1	1	0	0	Rm			Rd			1	N Z
@@ -173,9 +173,9 @@ Rd = REV(Rm)	1	0	1	1	1	0	1	0	0	0	Rm			Rd			1	-
 Rd = REV16(Rm)	1	0	1	1	1	0	1	0	0	1	Rm			Rd			1	-
 Rd = REVSH(Rm)	1	0	1	1	1	0	1	0	1	1	Rm			Rd			1	-
 Rd = ASR(Rm, u5)	0	0	0	1	0	u5					Rm			Rd			1	N Z C
-ASR Rd, Rm	0	1	0	0	0	0	0	1	0	0	Rm			Rd			1	N Z C
+ASR Rd, Rs	0	1	0	0	0	0	0	1	0	0	Rs			Rd			1	N Z C
 BIC Rd, Rm	0	1	0	0	0	0	1	1	1	0	Rm			Rd			1	N Z
-ROR Rd, Rm	0	1	0	0	0	0	0	1	1	1	Rm			Rd			1	N Z C
+ROR Rd, Rs	0	1	0	0	0	0	0	1	1	1	Rs			Rd			1	N Z C
 ADC Rd, Rm	0	1	0	0	0	0	0	1	0	1	Rm			Rd			1	N Z C V
 SBC Rd, Rm	0	1	0	0	0	0	0	1	1	0	Rm			Rd			1	N Z C V
 */})
