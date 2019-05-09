@@ -146,6 +146,23 @@ var CPU = function() {
 				this.r[getu(8, 3)] = this.setflg(norm(this.r[getu(8, 3)] - getu(0, 8)));
 			} else if (chk("10100")) { // Rd = PC + u8
 				this.r[getu(8, 3)] = norm(this.r[15] + 2 + (getu(0, 8) << 2));
+			} else if (chk("01000100")) { // Rd += Rm
+				var dstidx = getu(0, 3) | (getu(7, 1) << 3);
+				var srcidx = getu(3, 4);
+				if (srcidx == 15 && dstidx == 15) {
+					throw "Rd += Rm with both PC isn't allowed";
+				}
+				var srcvalue;
+				if (srcidx == 15) { // PC
+					srcvalue = norm(this.r[srcidx] + 2); // PC + 4 = (PC + 2) + 2
+				} else {
+					srcvalue = this.r[srcidx];
+				}
+				if (dstidx == 15) { // PC
+					this.r[dstidx] = norm((this.r[dstidx] + 2 + srcvalue) & 0xfffffffe);
+				} else {
+					this.r[dstidx] = norm(this.r[dstidx] + srcvalue);
+				}
 			} else if (chk("0001110")) { // Rd = Rn + u3
 				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(3, 3)] + getu(6, 3)));
 			} else if (chk("0001111")) { // Rd = Rn - u3
