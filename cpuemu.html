@@ -311,9 +311,22 @@ var CPU = function() {
 			} else if (chk("11100")) { // GOTO n11
 				// not +2 because PC+=2 is done already
 				this.r[15] = norm(this.r[15] + ((getn(0, 11) + 1) << 1));
-			} else if (chk("0100011101110000")) { // RET
-//				alert("ret");
-				return 0;
+			} else if (chk("01000111")) { // GOTO Rm / GOSUB Rm
+				var isgosub = getu(7, 1) === 1;
+				var iname = isgosub ? "GOSUB" : "GOTO";
+				if (getu(0, 3) !== 0) throw "instruction like " + iname + " Rm, but last 3 bits are not `000";
+				var srcidx = getu(3, 4);
+				if (srcidx === 13) throw "using SP for " + iname + " Rm is prohibited";
+				if (srcidx === 15) throw "using PC for " + iname + " Rm is prohibited";
+				if (!isgosub && srcidx == 14) { // RET
+//					alert("ret");
+					return 0;
+				}
+				if ((this.r[srcidx] & 1) === 0) {
+					throw "0 is passed as the LSB of the operand of " + iname + " Rm";
+				}
+				if (isgosub) this.r[14] = norm(this.r[15] | 1);
+				this.r[15] = norm(this.r[srcidx] & 0xfffffffe);
 			} else if (chk("0100001110")) { // BIC Rd, Rm (Rd &= ~Rm)
 				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] & ~this.r[getu(3, 3)]));
 			} else {
