@@ -354,9 +354,12 @@ window.onload = function() {
 		})(i);
 		get("regs").appendChild(r);
 	}
-	var r = create("div");
-	r.textContent = "Zero-flg: ";
-	get("regs").appendChild(r);
+	var flgnames = ["Negative", "Zero", "Carry", "Overflow"];
+	for (var i = 0; i < 4; i++) {
+		var r = create("div");
+		r.textContent = flgnames[i] + "-flg: ";
+		get("regs").appendChild(r);
+	}
 	var showRegs = function() {
 		var rs = get("regs").childNodes;
 		for (var i = 0; i < 16; i++) {
@@ -366,7 +369,10 @@ window.onload = function() {
 			}
 			rs[i].textContent = "R" + i + ": " + cpu.r[i] + negative + " #" + cpu.r[i].toString(16);
 		}
-		rs[16].textContent = "Zero-flg: " + cpu.status.z;
+		rs[16].textContent = flgnames[0] + "-flg: " + cpu.status.n;
+		rs[17].textContent = flgnames[1] + "-flg: " + cpu.status.z;
+		rs[18].textContent = flgnames[2] + "-flg: " + cpu.status.c;
+		rs[19].textContent = flgnames[3] + "-flg: " + cpu.status.v;
 	};
 	
 	var reset = function() {
