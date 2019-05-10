@@ -133,13 +133,13 @@ var CPU = function() {
 				return n;
 			};
 			this.checkmem = function(addr, n, iswrite) {
-				if (!iswrite && !this.mem.check(addr, n) &&
-				get("uninitialized_ram").value === "halt") {
-					throw "read from uninitialized memory #" + addr.toString(16);
-				}
 				if (addr % n != 0) {
 					throw "unaligned memory " + (iswrite ? "write" : "read") +
 						" #" + addr.toString(16);
+				}
+				if (!iswrite && !this.mem.check(addr, n) &&
+				get("uninitialized_ram").value === "halt") {
+					throw "read from uninitialized memory #" + addr.toString(16);
 				}
 			};
 			this.setflg = function(n) {
