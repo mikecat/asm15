@@ -318,11 +318,11 @@ var CPU = function() {
 				var srcidx = getu(3, 4);
 				if (srcidx === 13) throw "using SP for " + iname + " Rm is prohibited";
 				if (srcidx === 15) throw "using PC for " + iname + " Rm is prohibited";
-				if (!isgosub && srcidx == 14) { // RET
-//					alert("ret");
-					return 0;
-				}
 				if ((this.r[srcidx] & 1) === 0) {
+					if (!isgosub && srcidx == 14) { // RET
+//						alert("ret");
+						return 0;
+					}
 					throw "0 is passed as the LSB of the operand of " + iname + " Rm";
 				}
 				if (isgosub) this.r[14] = norm(this.r[15] | 1);
