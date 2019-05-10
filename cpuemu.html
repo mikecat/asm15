@@ -101,7 +101,7 @@ var CPU = function() {
 			alert ("unaligned instructon read #" + iaddr.toString(16));
 			return 0;
 		}
-		if (!this.mem.check(iaddr, 2) && get("uninitialized_ram").value === "halt") {
+		if (!this.mem.check(iaddr, 2) && get("uninitialized_memory").value === "halt") {
 			alert("read instruction from uninitialized memory #" + iaddr.toString(16));
 			return 0;
 		}
@@ -138,7 +138,7 @@ var CPU = function() {
 						" #" + addr.toString(16);
 				}
 				if (!iswrite && !this.mem.check(addr, n) &&
-				get("uninitialized_ram").value === "halt") {
+				get("uninitialized_memory").value === "halt") {
 					throw "read from uninitialized memory #" + addr.toString(16);
 				}
 			};
@@ -329,7 +329,7 @@ var CPU = function() {
 				this.r[15] = norm(this.r[srcidx] & 0xfffffffe);
 			} else if (chk("11110")) { // GOSUB n22
 				var upper = getn(0, 11);
-				if (!this.mem.check(this.r[15], 2) && get("uninitialized_ram").value === "halt") {
+				if (!this.mem.check(this.r[15], 2) && get("uninitialized_memory").value === "halt") {
 					alert("read instruction from uninitialized memory #" + this.r[15].toString(16));
 					return 0;
 				}
@@ -528,7 +528,7 @@ a {
 <option value="ignore">を無視</option>
 <option value="halt" selected="selected">で停止</option>
 </select><br>
-未初期化のRAMを読んだら<select id="uninitialized_ram">
+未初期化のメモリを読んだら<select id="uninitialized_memory">
 <option value="zero">0とみなす</option>
 <option value="halt" selected="selected">停止する</option>
 </select><br>
