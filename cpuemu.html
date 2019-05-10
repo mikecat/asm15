@@ -327,6 +327,20 @@ var CPU = function() {
 				}
 				if (isgosub) this.r[14] = norm(this.r[15] | 1);
 				this.r[15] = norm(this.r[srcidx] & 0xfffffffe);
+			} else if (chk("11110")) { // GOSUB n22
+				var upper = getn(0, 11);
+				if (!this.mem.check(this.r[15], 2) && get("uninitialized_ram").value === "halt") {
+					alert("read instruction from uninitialized memory #" + this.r[15].toString(16));
+					return 0;
+				}
+				var inst2 = this.mem.get16(this.r[15]);
+				if (((inst2 >> 11) & 0x1f) !== 0x1f) {
+					throw "partial GOSUB n22 instruction";
+				}
+				var lower = inst2 & 0x7ff;
+				var delta = (upper << 11) | lower;
+				this.r[14] = norm((this.r[15] + 2) | 1);
+				this.r[15] = norm(this.r[15] + 2 + delta * 2);
 			} else if (chk("0100001110")) { // BIC Rd, Rm (Rd &= ~Rm)
 				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] & ~this.r[getu(3, 3)]));
 			} else {
