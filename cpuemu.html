@@ -86,10 +86,13 @@ var CPU = function() {
 		},
 	};
 	this.step = function() {
-		var checkmem = get("uninitialized_ram").value === "halt";
 		var iaddr = this.r[15];
-		if (checkmem && !this.mem.check(iaddr, 2)) {
-			alert("read instruction from uninitialized RAM #" + iaddr.toString(16));
+		if (iaddr % 2 != 0) {
+			alert ("unaligned instructon read #" + iaddr.toString(16));
+			return 0;
+		}
+		if (!this.mem.check(iaddr, 2) && get("uninitialized_ram").value === "halt") {
+			alert("read instruction from uninitialized memory #" + iaddr.toString(16));
 			return 0;
 		}
 		var code = this.mem.get16(iaddr);
@@ -118,6 +121,16 @@ var CPU = function() {
 				while (n >= v) n -= v;
 				while (n < 0) n += v;
 				return n;
+			};
+			this.checkmem = function(addr, n, iswrite) {
+				if (!iswrite && !this.mem.check(addr, n) &&
+				get("uninitialized_ram").value === "halt") {
+					throw "read from uninitialized memory #" + addr.toString(16);
+				}
+				if (addr % n != 0) {
+					throw "unaligned memory " + (iswrite ? "write" : "read") +
+						" #" + addr.toString(16);
+				}
 			};
 			this.setflg = function(n) {
 				this.status.z = n == 0;
@@ -202,20 +215,20 @@ var CPU = function() {
 				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] ^ this.r[getu(3, 3)]));
 			} else if (chk("01111")) { // Rd = [Rn + u5]
 				var addr = norm(this.r[getu(3, 3)] + getu(6, 5));
-				if (checkmem && !this.mem.check(addr, 1)) {
-					throw "read byte from uninitialized RAM #" + addr.toString(16);
-				}
+				this.checkmem(addr, 1, false);
 				this.r[getu(0, 3)] = this.mem.get(addr);
 			} else if (chk("0101110")) { // Rd = [Rn + Rm]
 				var addr = norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]);
-				if (checkmem && !this.mem.check(addr, 1)) {
-					throw "read byte from uninitialized RAM #" + addr.toString(16);
-				}
+				this.checkmem(addr, 1, false);
 				this.r[getu(0, 3)] = this.mem.get(addr);
 			} else if (chk("01110")) { // [Rn + u5] = Rd
-				this.mem.set(norm(this.r[getu(3, 3)] + getu(6, 5)), this.r[getu(0, 3)]);
+				var addr = norm(this.r[getu(3, 3)] + getu(6, 5));
+				this.checkmem(addr, 1, true);
+				this.mem.set(addr, this.r[getu(0, 3)]);
 			} else if (chk("0101010")) { // [Rn + Rm] = Rd
-				this.mem.set(norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]), this.r[getu(0, 3)]);
+				var addr = norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]);
+				this.checkmem(addr, 1, true);
+				this.mem.set(addr, this.r[getu(0, 3)]);
 			} else if (chk("00101")) { // Rn - u8
 				this.setflg(norm(this.r[getu(8, 3)] - getu(0, 8)));
 			} else if (chk("0100001010")) { // Rn - Rm
