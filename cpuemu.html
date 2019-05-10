@@ -293,11 +293,20 @@ var CPU = function() {
 				this.setflg(norm(this.r[getu(0, 3)] - this.r[getu(3, 3)]));
 			} else if (chk("0100001000")) { // Rn & Rm
 				this.setflg(norm(this.r[getu(0, 3)] & this.r[getu(3, 3)]));
-			} else if (chk("11010000")) { // IF 0 GOTO n8
-				if (this.status.z) // not +2 because PC+=2 is done already
-					this.r[15] = norm(this.r[15] + ((getn(0, 8) + 1) << 1));
-			} else if (chk("11010001")) { // IF !0 GOTO n8
-				if (!this.status.z) // not +2 because PC+=2 is done already
+			} else if (chk("1101")) { // IF cond GOTO n8
+				var taken = false;
+				switch (getu(9, 3)) {
+					case 0: taken = this.status.z; break;
+					case 1: taken = this.status.c; break;
+					case 2: taken = this.status.n; break;
+					case 3: taken = this.status.v; break;
+					case 4: taken = !this.status.z && this.status.c; break;
+					case 5: taken = this.status.n === this.status.v; break;
+					case 6: taken = !this.status.z && this.status.n === this.status.v; break;
+					case 7: taken = true; break; // this is BKPT / Unpredictable
+				}
+				if (getu(8, 1)) taken = !taken;
+				if (taken) // not +2 because PC+=2 is done already
 					this.r[15] = norm(this.r[15] + ((getn(0, 8) + 1) << 1));
 			} else if (chk("11100")) { // GOTO n11
 				// not +2 because PC+=2 is done already
