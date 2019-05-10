@@ -84,6 +84,16 @@ var CPU = function() {
 			this.set(ad, n & 0xff);
 			this.set(ad + 1, (n >> 8) & 0xff);
 		},
+		get32: function(ad) {
+			var n = this.get16(ad);
+			n |= this.get16(ad + 2) << 16;
+			if (n < 0) n += 0x100000000;
+			return n;
+		},
+		set32: function(ad, n) {
+			this.set16(ad, n & 0xffff);
+			this.set16(ad + 2, (n >> 16) & 0xffff);
+		},
 	};
 	this.step = function() {
 		var iaddr = this.r[15];
@@ -217,18 +227,66 @@ var CPU = function() {
 				var addr = norm(this.r[getu(3, 3)] + getu(6, 5));
 				this.checkmem(addr, 1, false);
 				this.r[getu(0, 3)] = this.mem.get(addr);
+			} else if (chk("10001")) { // Rd = [Rn + u5]W
+				var addr = norm(this.r[getu(3, 3)] + getu(6, 5) * 2);
+				this.checkmem(addr, 2, false);
+				this.r[getu(0, 3)] = this.mem.get16(addr);
+			} else if (chk("01101")) { // Rd = [Rn + u5]L
+				var addr = norm(this.r[getu(3, 3)] + getu(6, 5) * 4);
+				this.checkmem(addr, 4, false);
+				this.r[getu(0, 3)] = this.mem.get32(addr);
+			} else if (chk("01001")) { // Rd = [PC + u8]L
+				var addr = norm((this.r[15] + 2 + getu(0, 8) * 4) & 0xfffffffc);
+				this.checkmem(addr, 4, false);
+				this.r[getu(8, 3)] = this.mem.get32(addr);
 			} else if (chk("0101110")) { // Rd = [Rn + Rm]
 				var addr = norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]);
 				this.checkmem(addr, 1, false);
 				this.r[getu(0, 3)] = this.mem.get(addr);
+			} else if (chk("0101011")) { // Rd = [Rn + Rm]C
+				var addr = norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]);
+				this.checkmem(addr, 1, false);
+				var value = this.mem.get(addr);
+				if (value & 0x80) value = norm(value | 0xffffff00);
+				this.r[getu(0, 3)] = value;
+			} else if (chk("0101101")) { // Rd = [Rn + Rm]W
+				var addr = norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]);
+				this.checkmem(addr, 2, false);
+				this.r[getu(0, 3)] = this.mem.get16(addr);
+			} else if (chk("0101111")) { // Rd = [Rn + Rm]S
+				var addr = norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]);
+				this.checkmem(addr, 2, false);
+				var value = this.mem.get16(addr);
+				if (value & 0x8000) value = norm(value | 0xffff0000);
+				this.r[getu(0, 3)] = value;
+			} else if (chk("0101100")) { // Rd = [Rn + Rm]L
+				var addr = norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]);
+				this.checkmem(addr, 4, false);
+				this.r[getu(0, 3)] = this.mem.get32(addr);
 			} else if (chk("01110")) { // [Rn + u5] = Rd
 				var addr = norm(this.r[getu(3, 3)] + getu(6, 5));
 				this.checkmem(addr, 1, true);
 				this.mem.set(addr, this.r[getu(0, 3)]);
+			} else if (chk("10000")) { // [Rn + u5]W = Rd
+				var addr = norm(this.r[getu(3, 3)] + getu(6, 5) * 2);
+				this.checkmem(addr, 2, true);
+				this.mem.set16(addr, this.r[getu(0, 3)]);
+			} else if (chk("01100")) { // [Rn + u5]L = Rd
+				var addr = norm(this.r[getu(3, 3)] + getu(6, 5) * 4);
+				this.checkmem(addr, 4, true);
+				this.mem.set32(addr, this.r[getu(0, 3)]);
 			} else if (chk("0101010")) { // [Rn + Rm] = Rd
 				var addr = norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]);
 				this.checkmem(addr, 1, true);
 				this.mem.set(addr, this.r[getu(0, 3)]);
+			} else if (chk("0101001")) { // [Rn + Rm]W = Rd
+				var addr = norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]);
+				this.checkmem(addr, 2, true);
+				this.mem.set16(addr, this.r[getu(0, 3)]);
+			} else if (chk("0101000")) { // [Rn + Rm]L = Rd
+				var addr = norm(this.r[getu(3, 3)] + this.r[getu(6, 3)]);
+				this.checkmem(addr, 4, true);
+				this.mem.set32(addr, this.r[getu(0, 3)]);
 			} else if (chk("00101")) { // Rn - u8
 				this.setflg(norm(this.r[getu(8, 3)] - getu(0, 8)));
 			} else if (chk("0100001010")) { // Rn - Rm
