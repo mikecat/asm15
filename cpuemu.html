@@ -345,6 +345,57 @@ var CPU = function() {
 				var delta = (upper << 11) | lower;
 				this.r[14] = norm((this.r[15] + 2) | 1);
 				this.r[15] = norm(this.r[15] + 2 + delta * 2);
+			} else if (chk("1011010")) { // PUSH {regs}
+				var reglist = getu(0, 9);
+				var sp = this.r[13];
+				if (reglist & 0x100) {
+					this.checkmem(sp = norm(sp - 4), 4, true);
+					this.mem.set32(sp, this.r[14]);
+				}
+				for (var i = 7; i >= 0; i--) {
+					if ((reglist >> i) & 1) {
+						this.checkmem(sp = norm(sp - 4), 4, true);
+						this.mem.set32(sp, this.r[i]);
+					}
+				}
+				this.r[13] = sp;
+			} else if (chk("1011110")) { // POP {regs}
+				var reglist = getu(0, 9);
+				var sp = this.r[13];
+				for (var i = 0; i <= 7; i++) {
+					if ((reglist >> i) & 1) {
+						this.checkmem(sp, 4, false);
+						this.r[i] = this.mem.get32(sp);
+						sp = norm(sp + 4);
+					}
+				}
+				if (reglist & 0x100) {
+					this.checkmem(sp, 4, false);
+					var newpc = this.mem.get32(sp);
+					sp = norm(sp + 4);
+					this.r[13] = sp;
+					if (newpc & 1) {
+						this.r[15] = norm(newpc & 0xfffffffe);
+					} else {
+						throw "LSB of POPed value to PC is 0";
+					}
+				} else {
+					this.r[13] = sp;
+				}
+			} else if (chk("101100000")) { // SP += u7
+				this.r[13] = norm(this.r[13] + getu(0, 7) * 4);
+			} else if (chk("101100001")) { // SP -= u7
+				this.r[13] = norm(this.r[13] - getu(0, 7) * 4);
+			} else if (chk("10101")) { // Rd = SP + u8
+				this.r[getu(8, 3)] = norm(this.r[13] + getu(0, 8) * 4);
+			} else if (chk("10011")) { // Rd = [SP + u8]L
+				var addr = norm(this.r[13] + getu(0, 8) * 4);
+				this.checkmem(addr, 4, false);
+				this.r[getu(8, 3)] = this.mem.get32(addr);
+			} else if (chk("10010")) { // [SP + u8]L = Rd
+				var addr = norm(this.r[13] + getu(0, 8) * 4);
+				this.checkmem(addr, 4, true);
+				this.mem.set32(addr, this.r[getu(8, 3)]);
 			} else if (chk("0100001110")) { // BIC Rd, Rm (Rd &= ~Rm)
 				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] & ~this.r[getu(3, 3)]));
 			} else {
