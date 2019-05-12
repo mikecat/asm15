@@ -497,6 +497,41 @@ var CPU = function() {
 					this.r[getu(0, 3)] = this.setflg(norm((v >>> s2) | (v << (32 - s2))));
 					this.status.c = ((v >> (s2 - 1)) & 1) != 0;
 				}
+			} else if (chk("11001")) { // LDM Rn, {regs}
+				var regs = getu(0, 8);
+				if (regs == 0) {
+					throw "LDM with empty regs";
+				}
+				var dstidx = getu(8, 3);
+				var addr = this.r[dstidx];
+				for (var i = 0; i < 4; i++) {
+					if ((regs >> i) & 1) {
+						this.checkmem(addr, 4, false);
+						this.r[i] = this.mem.get32(addr);
+						addr = norm(addr + 4);
+					}
+				}
+				if (!((regs >> dstidx) & 1)) {
+					this.r[dstidx] = addr;
+				}
+			} else if (chk("11000")) { // STM Rn, {regs}
+				var regs = getu(0, 8);
+				if (regs == 0) {
+					throw "STM with empty regs";
+				}
+				var dstidx = getu(8, 3);
+				if (((regs >> dstidx) & 1) && (regs & ((1 << dstidx) - 1))) {
+					throw "STM with invalid combination of Rn and regs";
+				}
+				var addr = this.r[dstidx];
+				for (var i = 0; i < 4; i++) {
+					if ((regs >> i) & 1) {
+						this.checkmem(addr, 4, true);
+						this.mem.set32(addr, this.r[i]);
+						addr = norm(addr + 4);
+					}
+				}
+				this.r[dstidx] = addr;
 			} else {
 				if (get("unsupported_op").value === "halt") {
 					throw "unsupported instruction";
