@@ -423,6 +423,20 @@ var CPU = function() {
 				var addr = norm(this.r[13] + getu(0, 8) * 4);
 				this.checkmem(addr, 4, true);
 				this.mem.set32(addr, this.r[getu(8, 3)]);
+			} else if (chk("1011101000")) { // Rd = REV(Rm)
+				var v = this.r[getu(3, 3)];
+				v = ((v >>> 8) & 0x00ff00ff) | ((v << 8) & 0xff00ff00);
+				v = ((v >>> 16) & 0x0000ffff) | ((v << 16) & 0xffff0000);
+				this.r[getu(0, 3)] = norm(v);
+			} else if (chk("1011101001")) { // Rd = REV16(Rm)
+				var v = this.r[getu(3, 3)];
+				v = ((v >>> 8) & 0x00ff00ff) | ((v << 8) & 0xff00ff00);
+				this.r[getu(0, 3)] = norm(v);
+			} else if (chk("1011101011")) { // Rd = REVSH(Rm)
+				var v = this.r[getu(3, 3)];
+				v = ((v >>> 8) & 0x000000ff) | ((v << 8) & 0x0000ff00);
+				if (v & 0x8000) v |= 0xffff0000;
+				this.r[getu(0, 3)] = norm(v);
 			} else if (chk("0100001110")) { // BIC Rd, Rm (Rd &= ~Rm)
 				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] & ~this.r[getu(3, 3)]));
 			} else {
