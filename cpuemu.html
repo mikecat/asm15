@@ -464,8 +464,39 @@ var CPU = function() {
 				v = ((v >>> 8) & 0x000000ff) | ((v << 8) & 0x0000ff00);
 				if (v & 0x8000) v |= 0xffff0000;
 				this.r[getu(0, 3)] = norm(v);
+			} else if (chk("00010")) { // Rd = ASR(Rm, u5)
+				var v = this.r[getu(3, 3)];
+				var s = getu(6, 5); // 1 <= s <= 32
+				if (s == 0) {
+					this.r[getu(0, 3)] = this.setflg(norm(v >> 31));
+					this.status.c = ((v >> 31) & 1) != 0;
+				} else {
+					this.r[getu(0, 3)] = this.setflg(norm(v >> s));
+					this.status.c = ((v >> (s - 1)) & 1) != 0;
+				}
+			} else if (chk("0100000100")) { // ASR Rd, Rs
+				var v = this.r[getu(0, 3)];
+				var s = this.r[getu(3, 3)];
+				if (0 <= s && s < 32) {
+					this.r[getu(0, 3)] = this.setflg(norm(v >> s));
+					if (s != 0) this.status.c = ((v >> (s - 1)) & 1) != 0;
+				} else {
+					this.r[getu(0, 3)] = this.setflg(norm(v >> 31));
+					this.status.c = ((v >> 31) & 1) != 0;
+				}
 			} else if (chk("0100001110")) { // BIC Rd, Rm (Rd &= ~Rm)
 				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] & ~this.r[getu(3, 3)]));
+			} else if (chk("0100000111")) { // ROR Rd, Rs
+				var v = this.r[getu(0, 3)];
+				var s = this.r[getu(3, 3)];
+				var s2 = s % 32;
+				if (s2 == 0) {
+					this.r[getu(0, 3)] = this.setflg(v);
+					if (s != 0) this.status.c = ((v >> 31) & 1) != 0;
+				} else {
+					this.r[getu(0, 3)] = this.setflg(norm((v >>> s2) | (v << (32 - s2))));
+					this.status.c = ((v >> (s2 - 1)) & 1) != 0;
+				}
 			} else {
 				if (get("unsupported_op").value === "halt") {
 					throw "unsupported instruction";
