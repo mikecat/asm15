@@ -351,6 +351,10 @@ var CPU = function() {
 				this.addsetflg(this.r[getu(0, 3)], this.r[getu(3, 3)]);
 			} else if (chk("0100001000")) { // Rn & Rm
 				this.setflg(norm(this.r[getu(0, 3)] & this.r[getu(3, 3)]));
+			} else if (chk("11011110")) { // Unused Opcode
+				throw "Unused Opcode";
+			} else if (chk("11011111")) { // SVC u8
+				throw "SVC " + getu(0, 8) + " is executed";
 			} else if (chk("1101")) { // IF cond GOTO n8
 				var taken = false;
 				switch (getu(9, 3)) {
@@ -532,6 +536,9 @@ var CPU = function() {
 					}
 				}
 				this.r[dstidx] = addr;
+			} else if (chk("10111110")) { // BKPT u8
+				throw "BKPT " + getu(0, 8) + " is executed";
+			// SVC u8 is not here but before IF cond GOTO n8 because they have common prefix
 			} else {
 				if (get("unsupported_op").value === "halt") {
 					throw "unsupported instruction";
