@@ -230,13 +230,40 @@ var CPU = function() {
 				}
 				this.r[getu(0, 3)] = this.setflg(ret);
 			} else if (chk("00000")) { // Rd = Rm << u5
-				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(3, 3)] << getu(6, 5)));
+				var v = this.r[getu(3, 3)];
+				var s = getu(6, 5); // 0 <= s <= 31
+				this.r[getu(0, 3)] = this.setflg(norm(v << s));
+				if (s != 0) this.status.c = ((v >> (32 - s)) & 1) != 0;
 			} else if (chk("00001")) { // Rd = Rm >> u5
-				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(3, 3)] >>> getu(6, 5)));
+				var v = this.r[getu(3, 3)];
+				var s = getu(6, 5); // 1 <= s <= 32
+				if (s == 0) {
+					this.r[getu(0, 3)] = this.setflg(0);
+					this.status.c = ((v >> 31) & 1) != 0;
+				} else {
+					this.r[getu(0, 3)] = this.setflg(norm(v >>> s));
+					this.status.c = ((v >> (s - 1)) & 1) != 0;
+				}
 			} else if (chk("0100000010")) { // Rd <<= Rs
-				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] << this.r[getu(3, 3)]));
+				var v = this.r[getu(0, 3)];
+				var s = this.r[getu(3, 3)];
+				if (0 <= s && s < 32) {
+					this.r[getu(0, 3)] = this.setflg(norm(v << s));
+					if (s != 0) this.status.c = ((v >> (32 - s)) & 1) != 0;
+				} else {
+					this.r[getu(0, 3)] = this.setflg(0);
+					this.status.c = s == 32 && (v & 1) != 0;
+				}
 			} else if (chk("0100000011")) { // Rd >>= Rs
-				this.r[getu(0, 3)] = this.setflg(norm(this.r[getu(0, 3)] >>> this.r[getu(3, 3)]));
+				var v = this.r[getu(0, 3)];
+				var s = this.r[getu(3, 3)];
+				if (0 <= s && s < 32) {
+					this.r[getu(0, 3)] = this.setflg(norm(v >>> s));
+					if (s != 0) this.status.c = ((v >> (s - 1)) & 1) != 0;
+				} else {
+					this.r[getu(0, 3)] = this.setflg(0);
+					this.status.c = s == 32 && ((v >> 31) & 1) != 0;
+				}
 			} else if (chk("0100001111")) { // Rd = ~Rm
 				this.r[getu(0, 3)] = this.setflg(norm(~this.r[getu(3, 3)]));
 			} else if (chk("0100000000")) { // Rd &= Rm
