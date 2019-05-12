@@ -311,6 +311,13 @@ var CPU = function() {
 				this.mem.set32(addr, this.r[getu(0, 3)]);
 			} else if (chk("00101")) { // Rn - u8
 				this.subsetflg(this.r[getu(8, 3)], getu(0, 8));
+			} else if (chk("01000101")) { // Rn - Rm
+				var nidx = (getu(7, 1) << 3) | getu(0, 3);
+				var midx = getu(3, 4);
+				if (nidx == 15 || midx == 15) {
+					throw "using R15 in Rn - Rm is prohibited";
+				}
+				this.subsetflg(this.r[nidx], this.r[midx]);
 			} else if (chk("0100001010")) { // Rn - Rm
 				this.subsetflg(this.r[getu(0, 3)], this.r[getu(3, 3)]);
 			} else if (chk("0100001011")) { // Rn + Rm
