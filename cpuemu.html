@@ -74,6 +74,7 @@ var CPU = function() {
 		},
 		set: function(ad, n) {
 			this.ram[ad] = n;
+			if (this.notify) this.notify(ad);
 		},
 		get16: function(ad) {
 			var n = this.get(ad);
@@ -607,6 +608,137 @@ window.onload = function() {
 		rs[19].textContent = flgnames[3] + "-flg: " + cpu.status.v;
 	};
 	
+	var memDumpStartAddress = 0;
+	var t, tr;
+	t = create("table");
+	tr = create("tr");
+	tr.appendChild(create("th"));
+	for (var i = 0; i < 16; i++) {
+		var th = create("th");
+		th.textContent = i.toString(16);
+		if (i % 4 == 0) th.className = "mark";
+		tr.appendChild(th);
+	}
+	t.appendChild(tr);
+	var addressCellList = [];
+	var byteCellList = [];
+	var wordCellList = [];
+	var longCellList = [];
+	for (var i = 0; i < 0x1000; i += 16) {
+		tr = create("tr");
+		var td = create("td");
+		td.textContent = "#" + i.toString(16);
+		addressCellList.push(td);
+		tr.appendChild(td);
+		for (var j = 0; j < 16; j++) {
+			td = create("td");
+			td.textContent = "#00";
+			if (j % 4 == 0) td.className = "mark";
+			byteCellList.push(td);
+			tr.appendChild(td);
+			if (j % 2 == 0) {
+				td = create("td");
+				td.textContent = "#0000";
+				td.colSpan = 2;
+				td.style.display = "none";
+				wordCellList.push(td);
+				tr.appendChild(td);
+			}
+			if (j % 4 == 0) {
+				td = create("td");
+				td.textContent = "#00000000";
+				td.colSpan = 4;
+				td.style.display = "none";
+				longCellList.push(td);
+				tr.appendChild(td);
+			}
+		}
+		t.appendChild(tr);
+	}
+	var displayingCellList = byteCellList;
+	get("mem").appendChild(t);
+	var memDumpFunc = function() {
+		var kind = get("mem_format").value;
+		if (kind == "signed") {
+			return function(n, w) {
+				if (w == 4) {
+					return (n >= 0x80000000 ? n - 0x100000000 : n).toString(10);
+				} else {
+					var threshold = 1 << (w * 8 - 1);
+					return (n >= threshold ? n - (1 << (w * 8)) : n).toString(10);
+				}
+			}
+		} else if (kind == "unsigned") {
+			return function(n, w) {
+				return n.toString(10);
+			}
+		} else {
+			return function(n, w) {
+				var ret = n.toString(16);
+				while (ret.length < w * 2) ret = "0" + ret;
+				return "#" + ret;
+			}
+		}
+	};
+	cpu.mem.notify = function(addr) {
+		var daddr = addr - memDumpStartAddress;
+		if (0 <= daddr && daddr < 0x1000) {
+			var f = memDumpFunc();
+			byteCellList[daddr].textContent =
+				cpu.mem.check(daddr, 1) ? f(cpu.mem.get(daddr), 1) : "??";
+			var addrw = daddr >> 1;
+			wordCellList[addrw].textContent =
+				cpu.mem.check(addrw * 2, 2) ? f(cpu.mem.get16(addrw * 2), 2) : "????";
+			var addrl = daddr >> 2;
+			longCellList[addrl].textContent =
+				cpu.mem.check(addrl * 4, 4) ? f(cpu.mem.get32(addrl * 4), 4) : "????????";
+		}
+	};
+	var memDumpUpdateAll = function() {
+		var f = memDumpFunc();
+		for (var i = 0; i < 0x1000; i++) {
+			var addr = memDumpStartAddress + i;
+			byteCellList[i].textContent =
+				cpu.mem.check(addr, 1) ? f(cpu.mem.get(addr), 1) : "??";
+		}
+		for (var i = 0; i < 0x1000; i += 2) {
+			var addr = memDumpStartAddress + i;
+			wordCellList[i >> 1].textContent =
+				cpu.mem.check(addr, 2) ? f(cpu.mem.get16(addr), 2) : "????";
+		}
+		for (var i = 0; i < 0x1000; i += 4) {
+			var addr = memDumpStartAddress + i;
+			longCellList[i >> 2].textContent =
+				cpu.mem.check(addr, 4) ? f(cpu.mem.get32(addr), 4) : "????????";
+		}
+		for (var i = 0; i < addressCellList.length; i++) {
+			addressCellList[i].textContent = "#" + (memDumpStartAddress + i * 16).toString(16);
+		}
+	};
+	var memDumpSwitchLength = function() {
+		for (var i = 0; i < displayingCellList.length; i++) displayingCellList[i].style.display = "none";
+		var arr;
+		var len = get("mem_length").value;
+		if (len === "byte") arr = byteCellList;
+		else if (len === "word") arr = wordCellList;
+		else if (len === "long") arr = longCellList;
+		else arr = [];
+		for (var i = 0; i < arr.length; i++) arr[i].style.display = "";
+		displayingCellList = arr;
+	};
+	var memDumpSwitchSaddr = function() {
+		var newval = parseInt(get("mem_saddr").value);
+		if (!isNaN(newval) && 0 <= newval && newval <= 0x10000000 - 0x1000) {
+			memDumpStartAddress = newval - (newval % 16);
+			memDumpUpdateAll();
+		}
+	};
+	get("mem_format").onchange = memDumpUpdateAll;
+	get("mem_length").onchange = memDumpSwitchLength;
+	get("mem_apply_saddr").onclick = memDumpSwitchSaddr;
+	memDumpSwitchLength();
+	memDumpSwitchSaddr();
+	
 	var reset = function() {
 		cpu.reset();
 		cpu.r[1] = 0x100;
@@ -614,6 +746,7 @@ window.onload = function() {
 		cpu.r[14] = 0xDEADBEEF; // LR
 		cpu.r[15] = 0; // PC
 		cpu.mem.ram = [];
+		memDumpUpdateAll();
 		autoflg = false;
 		get("auto").textContent = "START";
 		
@@ -684,10 +817,37 @@ window.onload = function() {
 }
 #regs {
 	height: 400px;
+	width: 23em;
 	display: inline-block;
 	font-size: 14px;
 	vertical-align: top;
 }
+#mem {
+	height: 400px;
+	display: inline-block;
+	font-size: 14px;
+	vertical-align: top;
+}
+#mem table {
+	display: block;
+	overflow-y: scroll;
+	height: 27em;
+}
+#mem td,th {
+	border: 1px solid black;
+	font-size: 14px;
+	width: 2.5em;
+}
+#mem th:first-child {
+	width: auto;
+}
+#mem td {
+	text-align: right;
+}
+#mem .mark {
+	background-color: #eee;
+}
+
 #config {
 	margin-top: 1em;
 	margin-bottom: 1em;
@@ -716,6 +876,21 @@ a {
 0100011101110000
 </textarea>
 <div id=regs></div>
+<div id=mem>
+format:<select id="mem_format">
+<option value="hex" selected="selected">hex</option>
+<option value="unsigned">unsigned dec</option>
+<option value="signed">signed dec</option>
+</select>
+&nbsp;length:<select id="mem_length">
+<option value="byte" selected="selected">byte</option>
+<option value="word">word</option>
+<option value="long">long</option>
+</select>
+&nbsp;start addr:<input id="mem_saddr" type="text" value="0x0" size="12">
+<input id="mem_apply_saddr" type="button" value="GO">
+<br>
+</div>
 <br>
 <button id=auto>START</button>
 <button id=step>STEP</button>
