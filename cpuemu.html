@@ -509,7 +509,7 @@ var CPU = function() {
 				}
 				var dstidx = getu(8, 3);
 				var addr = this.r[dstidx];
-				for (var i = 0; i < 4; i++) {
+				for (var i = 0; i < 8; i++) {
 					if ((regs >> i) & 1) {
 						this.checkmem(addr, 4, false);
 						this.r[i] = this.mem.get32(addr);
@@ -529,7 +529,7 @@ var CPU = function() {
 					throw "STM with invalid combination of Rn and regs";
 				}
 				var addr = this.r[dstidx];
-				for (var i = 0; i < 4; i++) {
+				for (var i = 0; i < 8; i++) {
 					if ((regs >> i) & 1) {
 						this.checkmem(addr, 4, true);
 						this.mem.set32(addr, this.r[i]);
