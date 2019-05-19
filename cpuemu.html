@@ -766,13 +766,16 @@ window.onload = function() {
 		if (0 <= daddr && daddr < 0x1000) {
 			var f = memDumpFunc();
 			byteCellList[daddr].textContent =
-				cpu.mem.check(daddr, 1) ? f(cpu.mem.get(daddr), 1) : "??";
+				cpu.mem.check(daddr + memDumpStartAddress, 1) ?
+					f(cpu.mem.get(daddr + memDumpStartAddress), 1) : "??";
 			var addrw = daddr >> 1;
 			wordCellList[addrw].textContent =
-				cpu.mem.check(addrw * 2, 2) ? f(cpu.mem.get16(addrw * 2), 2) : "????";
+				cpu.mem.check(addrw * 2 + memDumpStartAddress, 2) ?
+					f(cpu.mem.get16(addrw * 2 + memDumpStartAddress), 2) : "????";
 			var addrl = daddr >> 2;
 			longCellList[addrl].textContent =
-				cpu.mem.check(addrl * 4, 4) ? f(cpu.mem.get32(addrl * 4), 4) : "????????";
+				cpu.mem.check(addrl * 4 + memDumpStartAddress, 4) ?
+					f(cpu.mem.get32(addrl * 4 + memDumpStartAddress), 4) : "????????";
 		}
 	};
 	var memDumpUpdateAll = function() {
