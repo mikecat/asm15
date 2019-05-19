@@ -12,6 +12,7 @@ body {
 }
 </style>
 <script src="lib/fukuno.js"></script>
+<script src="ijfont.js"></script>
 <script>"use strict";
 
 var CPU = function() {
@@ -823,14 +824,54 @@ window.onload = function() {
 	memDumpSwitchLength();
 	memDumpSwitchSaddr();
 	
+	var prevRealMode = 0;
 	var reset = function() {
+		var realMode = parseInt(get("real_mode").value);
 		cpu.reset();
 		cpu.r[1] = 0x100;
 		cpu.r[13] = 0x1000; // SP
 		cpu.r[14] = 0xDEADBEEF; // LR
 		cpu.r[15] = 0; // PC
 		cpu.mem.ram = [];
+		if (realMode > 0 && prevRealMode === 0 && memDumpStartAddress === 0) {
+			memDumpStartAddress = 0x10000000;
+		} else if (realMode === 0 && prevRealMode > 0 && memDumpStartAddress === 0x10000000) {
+			memDumpStartAddress = 0;
+		}
+		prevRealMode = 0;
 		memDumpUpdateAll();
+		if (realMode > 0) {
+			var font = realMode >= 12 ? ijfont_1_2 : ijfont_1_1;
+			var crom_addr = 0x1000;
+			var cram_addr = 0x10000000;
+			var div_addr = 0x2000;
+			var div_data = [
+				0x0A,0x46,0x01,0x46,0x00,0x20,0x01,0x23,
+				0x91,0x42,0x0E,0xD3,0x12,0x42,0x0C,0xD0,
+				0x04,0xD4,0x5B,0x00,0x52,0x00,0x01,0xD4,
+				0x8A,0x42,0xFA,0xD3,0x91,0x42,0x01,0xD3,
+				0x89,0x1A,0xC0,0x18,0x52,0x08,0x5B,0x08,
+				0xF8,0xD1,0x70,0x47
+			];
+			for (var i = 0; i < 0xe0 * 8; i++) {
+				cpu.mem.set(crom_addr + i, font[i]);
+			}
+			for (var i = 0; i < 0x20 * 8; i++) {
+				cpu.mem.set(cram_addr + i, font[i + 0xe0 * 8]);
+			}
+			if (realMode >= 11) {
+				cpu.r[1] = cram_addr - 0x700;
+				cpu.r[2] = crom_addr;
+			}
+			if (realMode >= 12) {
+				for (var i = 0; i < div_data.length; i++) {
+					cpu.mem.set(div_addr + i, div_data[i]);
+				}
+				cpu.r[3] = div_addr | 1;
+			}
+			cpu.r[13] = 0x10001000;
+			cpu.r[15] = 0x10000000;
+		}
 		autoflg = false;
 		get("auto").textContent = "START";
 		
@@ -902,9 +943,15 @@ window.onload = function() {
 			}
 		}
 		var offset = 0;
-		if (binExists) offset = 0;
-		else if (pokeExists) offset = 0x700;
-		else if (arrayExists) offset = 0x800;
+		if (realMode === 0) {
+			if (binExists) offset = 0;
+			else if (pokeExists) offset = 0x700;
+			else if (arrayExists) offset = 0x800;
+		} else {
+			if (binExists) offset = 0;
+			else if (pokeExists || arrayExists) offset = 0x700;
+			offset -= 0x10000000;
+		}
 		for (var i = 0; i < memWrites.length; i++) {
 			var addr = memWrites[i][0] - offset;
 			cpu.mem.set(addr, memWrites[i][1]);
@@ -1050,13 +1097,20 @@ format:<select id="mem_format">
 自動実行の速さは<select id="autostep_interval">
 <option value="10">高速</option>
 <option value="100" selected="selected">通常</option>
+</select><br>
+IchigoJam再現モード<select id="real_mode">
+<option value="0" selected="selected">オフ</option>
+<option value="10">1.0風</option>
+<option value="11">1.1風</option>
+<option value="12">1.2風</option>
 </select>
 </div>
 <div id='credit'>
 cpuemu a1 (for <a href=http://ichigojam.net/>IchigoJam</a>)<br>
 <a href="https://ichigojam.github.io/asm15/cpuemu.html">Original</a> APP: <a href='http://fukuno.jig.jp/1328'>CC BY fukuno.jig.jp</a><br>
 Modified By みけCAT<br>
-Modification: <a href="https://creativecommons.org/licenses/by/4.0/deed.ja">CC BY 4.0</a> by みけCAT
+Modification: <a href="https://creativecommons.org/licenses/by/4.0/deed.ja">CC BY 4.0</a> by みけCAT<br>
+IchigoJam FONT(Original): CC BY IchigoJam(<a href="http://ichigojam.net/">http://ichigojam.net/</a>)
 </div>
 
 </body>
