@@ -809,7 +809,7 @@ window.onload = function() {
 	};
 	var memDumpSwitchSaddr = function() {
 		var newval = parseInt(get("mem_saddr").value);
-		if (!isNaN(newval) && 0 <= newval && newval <= 0x10000000 - 0x1000) {
+		if (!isNaN(newval) && 0 <= newval && newval <= 0x100000000 - 0x1000) {
 			memDumpStartAddress = newval - (newval % 16);
 			memDumpUpdateAll();
 		}
