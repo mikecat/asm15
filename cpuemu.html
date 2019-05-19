@@ -75,7 +75,7 @@ var CPU = function() {
 			return this.ram[ad];
 		},
 		set: function(ad, n) {
-			this.ram[ad] = n;
+			this.ram[ad] = n & 0xff;
 			if (this.notify) this.notify(ad);
 		},
 		get16: function(ad) {
