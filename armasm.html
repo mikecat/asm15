@@ -172,6 +172,10 @@ makeTable("t1188b2", function() {/*
 Rd = REV(Rm)	1	0	1	1	1	0	1	0	0	0	Rm			Rd			1	-
 Rd = REV16(Rm)	1	0	1	1	1	0	1	0	0	1	Rm			Rd			1	-
 Rd = REVSH(Rm)	1	0	1	1	1	0	1	0	1	1	Rm			Rd			1	-
+Rd = SXTB(Rm)	1	0	1	1	0	0	1	0	0	1	Rm			Rd			1	-
+Rd = SXTH(Rm)	1	0	1	1	0	0	1	0	0	0	Rm			Rd			1	-
+Rd = UXTB(Rm)	1	0	1	1	0	0	1	0	1	1	Rm			Rd			1	-
+Rd = UXTH(Rm)	1	0	1	1	0	0	1	0	1	0	Rm			Rd			1	-
 Rd = ASR(Rm, u5)	0	0	0	1	0	u5					Rm			Rd			1	N Z C
 ASR Rd, Rs	0	1	0	0	0	0	0	1	0	0	Rs			Rd			1	N Z C
 BIC Rd, Rm	0	1	0	0	0	0	1	1	1	0	Rm			Rd			1	N Z
@@ -182,8 +186,41 @@ SBC Rd, Rm	0	1	0	0	0	0	0	1	1	0	Rm			Rd			1	N Z C V
 </script>
 ※BIC:ビットクリア、ASR:符号付き右シフト、ROR:右ローテート<br>
 ※REV:byteオーダー反転、REV16:byteオーダー反転(2byteずつ)、REVSH:符号付き16bitを反転32bit化<br>
+※SXTB:1byteから符号拡張、SXTH:2byteから符号拡張、UXTB:1byteからゼロ拡張、UXTH:2byteからゼロ拡張<br>
 ※ADC:キャリー付き足し算、SBC:キャリー付き引き算<br>
 ※シフト/ローテート演算: シフト量が0のときはCフラグを変更しない<br>
+
+<!--
+SXTB, SXTH, UXTB, UXTH 命令に対応するマシン語は、Raspbian上のasおよびobjdumpの出力から推測した。
+1. 以下のファイルtest.sを用意した。
+
+SXTB R1, R4
+SXTB R6, R3
+SXTH R1, R4
+SXTH R6, R3
+UXTB R1, R4
+UXTB R6, R3
+UXTH R1, R4
+UXTH R6, R3
+
+2. 以下のコマンドを入力した。
+
+$ as -mthumb -o test.o test.s
+$ objdump -d test.o
+
+3. 以下の逆アセンブル結果を得た。
+
+00000000 <.text>:
+   0:   b261            sxtb    r1, r4
+   2:   b25e            sxtb    r6, r3
+   4:   b221            sxth    r1, r4
+   6:   b21e            sxth    r6, r3
+   8:   b2e1            uxtb    r1, r4
+   a:   b2de            uxtb    r6, r3
+   c:   b2a1            uxth    r1, r4
+   e:   b29e            uxth    r6, r3
+
+-->
 
 <table id="t1479d" class=tarmasm></table>
 <script>
@@ -216,10 +253,6 @@ SVC u8	1	1	0	1	1	1	1	1	u8								※	-
 <script>
 makeTable("tunknown", function() {/*
 マシン語不明	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	cycles	flags
-Rd = SXTB(Rm)	?																1	-
-Rd = SXTH(Rm)	?																1	-
-Rd = UXTB(Rm)	?																1	-
-Rd = UXTH(Rm)	?																1	-
 DMB	?																4	-
 DSB	?																4	-
 ISB	?																4	-
@@ -230,7 +263,6 @@ WFE	?																2	-
 YIELD	?																1	-
 */})
 </script>
-※SXTB:1byteから符号拡張、SXTH:2byteから符号拡張、UXTB:1byteからゼロ拡張、UXTH:2byteからゼロ拡張<br>
 ※spec_reg:APSR/IPSR/EPSR/IEPSR/IAPSR/EAPSR/PSR/MSP/PSP/PRIMASK/CONTROL<br>
 ※APSRへの書き込みは、フラグを変更する<br>
 ※DMB:データメモリバリア、DSB:データ同期バリア、ISB:命令同期バリア<br>
