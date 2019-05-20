@@ -165,12 +165,13 @@ var CPU = function() {
 				this.status.v = (n & s) == (m & s) && (n & s) != (r & s);
 				return this.setflg(r);
 			};
-			this.subsetflg = function(n, m) {
+			this.subsetflg = function(n, m, carry = false) {
 				n = norm(n);
 				m = norm(m);
-				var r = norm(n - m);
+				var c = carry ? 1 : 0;
+				var r = norm(n - m - c);
 				var s = 0x80000000;
-				this.status.c = n >= m;
+				this.status.c = carry ? (n > m) : (n >= m);
 				this.status.v = (n & s) != (m & s) && (n & s) != (r & s);
 				return this.setflg(r);
 			};
@@ -577,6 +578,9 @@ var CPU = function() {
 			} else if (chk("0100000101")) { // ADC Rd, Rm
 				this.clockCount++;
 				this.r[getu(0, 3)] = this.addsetflg(this.r[getu(0, 3)], this.r[getu(3, 3)], this.status.c);
+			} else if (chk("0100000110")) { // SBC Rd, Rm
+				this.clockCount++;
+				this.r[getu(0, 3)] = this.subsetflg(this.r[getu(0, 3)], this.r[getu(3, 3)], !this.status.c);
 			} else if (chk("11001")) { // LDM Rn, {regs}
 				this.clockCount++;
 				var regs = getu(0, 8);
