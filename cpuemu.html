@@ -12,6 +12,7 @@ body {
 }
 </style>
 <script src="lib/fukuno.js"></script>
+<script src="readmcode.js"></script>
 <script src="ijfont.js"></script>
 <script>"use strict";
 
@@ -899,73 +900,16 @@ window.onload = function() {
 		autoflg = false;
 		get("auto").textContent = "START";
 		
-		var s = get("prog").value.split("\n");
 		var n = 0;
-		var parse = function(n) {
-			var s = "";
-			for (var i = 0; i < n.length; i++) {
-				if (n.charAt(i) == "0" || n.charAt(i) == "1")
-					s += n.charAt(i);
-			}
-			return s;
-		};
-		var parseBasInt = function(s) {
-			if (s.substr(0, 1) === "#") return parseInt(s.substr(1), 16);
-			else if (s.substr(0, 1) === "`") return parseInt(s.substr(1), 2);
-			else return parseInt(s, 10);
-		};
-		var memWrites = [];
+		var memWrites = readMachineCode(get("prog").value);
 		var binExists = false, pokeExists = false, arrayExists = false;
-		for (var i = 0; i < s.length; i++) {
-			var basCode = s[i].replace(/\s/g, ""); // erase spaces
-			basCode = basCode.replace(/^\d+/, ""); // erase line number
-			basCode = basCode.replace(/'.*$/, ""); // erase comment
-			var basCodes = basCode.split(":");
-			var basValid = false;
-			for (var j = 0; j < basCodes.length; j++) {
-				var code = basCodes[j];
-				var matched;
-				if ((matched = /^poke(#[0-9a-fA-F]+|[0-9]+|`[01]+),/i.exec(code))) {
-					var addr = parseBasInt(matched[1]);
-					var data = code.split(",");
-					for (var k = 1; k < data.length; k++) {
-						memWrites.push([addr, parseBasInt(data[k])]);
-						addr++;
-					}
-					pokeExists = true;
-					basValid = true;
-				} else if ((matched = /^\[(#[0-9a-fA-F]+|[0-9]+|`[01]+)\]=(#[0-9a-fA-F]+|[0-9]+|`[01]+)$/i.exec(code))) {
-					var idx = parseBasInt(matched[1]);
-					var value = parseBasInt(matched[2]);
-					memWrites.push([0x800 + idx * 2, value & 0xff]);
-					memWrites.push([0x800 + idx * 2 + 1, (value >> 8) & 0xff]);
-					arrayExists = true;
-					basValid = true;
-				} else if ((matched = /^let\[(#[0-9a-fA-F]+|[0-9]+|`[01]+)\],/i.exec(code))) {
-					var idx = parseBasInt(matched[1]);
-					var data = code.split(",");
-					for (var k = 1; k < data.length; k++) {
-						var value = parseBasInt(data[k]);
-						memWrites.push([0x800 + idx * 2, value & 0xff]);
-						memWrites.push([0x800 + idx * 2 + 1, (value >> 8) & 0xff]);
-						idx++;
-					}
-					arrayExists = true;
-					basValid = true;
-				}
-			}
-
-			if (!basValid) {
-				var binCode = parse(s[i]);
-				if (binCode.length == 16) {
-					var binValue = parseInt(binCode, 2);
-					memWrites.push([n * 2, binValue & 0xff]);
-					memWrites.push([n * 2 + 1, (binValue >> 8) & 0xff]);
-					n++;
-					binExists = true;
-				}
-			}
+		for (var i = 0; i < memWrites.length; i++) {
+			var kind = memWrites[i][2];
+			if (kind === "bin") binExists = true;
+			else if (kind === "poke") pokeExists = true;
+			else if (kind === "array") arrayExists = true;
 		}
+
 		var offset = 0;
 		if (realMode === 0) {
 			if (binExists) offset = 0;
