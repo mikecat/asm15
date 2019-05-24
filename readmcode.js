@@ -1,12 +1,3 @@
-function parseBinary(n) {
-	var s = "";
-	for (var i = 0; i < n.length; i++) {
-		if (n.charAt(i) == "0" || n.charAt(i) == "1")
-			s += n.charAt(i);
-	}
-	return s;
-}
-
 function parseBasInt(s) {
 	if (s.substr(0, 1) === "#") return parseInt(s.substr(1), 16);
 	else if (s.substr(0, 1) === "`") return parseInt(s.substr(1), 2);
@@ -55,7 +46,7 @@ function readMachineCode(codeStr) {
 		}
 
 		if (!basValid) {
-			var binCode = parseBinary(s[i]);
+			var binCode = s[i].replace(/[^01]/g, "");
 			if (binCode.length == 16) {
 				var binValue = parseInt(binCode, 2);
 				memWrites.push([n * 2, binValue & 0xff, "bin"]);
