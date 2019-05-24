@@ -2,6 +2,9 @@
 Assembler for IchigoJam  
 https://mikecat.github.io/asm15/  
 
+Disassembler for asm15  
+https://mikecat.github.io/asm15/disasm15.html  
+
 asm15 Assembly language  
 https://mikecat.github.io/asm15/armasm.html  
 
