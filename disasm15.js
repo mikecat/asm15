@@ -282,8 +282,10 @@ window.onload = function() {
 									var startBit = formatData.length > 0 ? parseInt(formatData[0]) : 0;
 									var bitLength = formatData.length > 1 ? parseInt(formatData[1]) : 0;
 									var offset = formatData.length > 2 ? parseInt(formatData[2]) : 0;
+									console.log(formatData);
+									console.log(offset);
 									if (formatKind === "u" || formatKind === "d") {
-										var value = ((machineCodes[i] >> startBit) + offset) & ((1 << bitLength) - 1);
+										var value = ((machineCodes[i] >> startBit) & ((1 << bitLength) - 1)) + offset;
 										if (formatKind !== "d" || (value >> (bitLength - 1)) === 0) {
 											asmInst += valueToString(value, 10);
 										} else {
