@@ -1,6 +1,8 @@
 "use strict";
 
 window.onload = function() {
+	var conds = ["0", "!0", "CS", "CC", "MI", "PL", "VS", "VC", "HI", "LS", "GE", "LT", "GT", "LE"];
+
 	// 上から試して、一番最初にマッチしたものを採用する
 	// マッチするものがなければ、DATAWを出力する
 	// [上位パターン, 変換先]
@@ -13,6 +15,16 @@ window.onload = function() {
 	//     inst      : 変換結果のアセンブリ言語コード
 	//     deltaInst : 機械語ワードを何個消費したか
 
+	// ラベル指定子
+	// $<offset>,<multiplier>[,<fallback-mode>]$
+	//    offset        : この命令から参照先の場所へのオフセット
+	//    multiplier    : オフセットに掛ける数(1(ワード単位)/2(2ワード単位))
+	//    fallback-mode : ラベルに変換できない時の出力方法
+	//                    goto  : GOTO, IF用 (デフォルト)
+	//                    gosub : GOSUB用
+	//                    mov   : Rd = RC + u8用
+	//                    mem   : Rd = [PC + u8]L用
+
 	// 整数用フォーマット指定子
 	// %<start-bit>,<bit-length>[,<offset>]<format>
 	//   start-bit  : 数を抽出する範囲の最下位ビット (LSBが0)
@@ -20,6 +32,7 @@ window.onload = function() {
 	//   offset     : 抽出後出力する際に足す値
 	//   format     : 数の出力方法
 	//                u : 10進符号なし
+	//                d : 10進符号あり
 	var convertList = [
 		["00100", "R%8,3u = %0,8u"],
 		["010001100", "R%0,3u = R%3,4u"], 
@@ -27,7 +40,7 @@ window.onload = function() {
 
 		["00110", "R%8,3u += %0,8u"],
 		["00111", "R%8,3u -= %0,8u"],
-		["10100", "R%8,3u = PC + %0,8,1u"],
+		["10100", "R%8,3u = $%0,8,1u,2,mov$"],
 		["010001000", "R%0,3u += %3,4u"],
 		["010001001", "R%0,3,8u += %3,4u"],
 		["0001110", "R%0,3u = R%3,3u + %6,3u"],
@@ -48,7 +61,7 @@ window.onload = function() {
 		["01111", "R%0,3u = [R%3,3u + %6,5u]"],
 		["10001", "R%0,3u = [R%3,3u + %6,5u]W"],
 		["01101", "R%0,3u = [R%3,3u + %6,5u]L"],
-		["01001", "R%8,3u = [PC + %0,8u]L"],
+		["01001", "R%8,3u = [$%0,8,1u,2,mem$]L"],
 		["0101110", "R%0,3u = [R%3,3u + R%6,3u]"],
 		["0101011", "R%0,3u = [R%3,3u + R%6,3u]C"],
 		["0101101", "R%0,3u = [R%3,3u + R%6,3u]W"],
@@ -68,8 +81,38 @@ window.onload = function() {
 		["0100001011", "R%0,3u + R%3,3u"],
 		["0100001000", "R%0,3u & R%3,3u"],
 
-		// TODO: 分岐系
-		["0100011101110000", "RET"], // 暫定 (TODO: GOTO Rmにマージ)
+		["1101", function(mCode1, mCode2) { // IF cond GOTO n8
+			var cond = (mCode1 >> 8) & 0xf;
+			if (cond >= conds.length) {
+				return {"inst": null, "deltaInst": 0};
+			}
+			var offset = (mCode1 + 2) & 0xff;
+			if (offset & 0x80) offset -= 0x100;
+			return {"inst": "IF " + conds[cond] + " GOTO $" + offset + ",1$", "deltaInst": 1};
+		}],
+		["11100", "GOTO $%0,11,2d,1$"],
+		["010001110", function(mCode1, mCode2) { // GOTO Rm / RET
+			if ((mCode1 & 7) !== 0) {
+				return {"inst": null, "deltaInst": 0};
+			}
+			var reg = (mCode1 >> 3) & 0xf;
+			return {"inst": (reg === 14 ? "RET" : "GOTO R" + reg), "deltaInst": 1};
+		}],
+		["010001111", function(mCode1, mCode2) { // GOSUB Rm
+			if ((mCode1 & 7) !== 0) {
+				return {"inst": null, "deltaInst": 0};
+			}
+			var reg = (mCode1 >> 3) & 0xf;
+			return {"inst": "GOSUB R" + reg, "deltaInst": 1};
+		}],
+		["11110", function(mCode1, mCode2) { // GOSUB n22
+			if (((mCode2 >> 11) & 0x1f) !== 0x1f) {
+				return {"inst": null, "deltaInst": 0};
+			}
+			var offset = (((mCode2 & 0x7ff) | ((mCode1 & 0x7ff) << 11)) + 2) & 0x3fffff;
+			if (offset & 0x200000) offset -= 0x400000;
+			return {"inst": "GOSUB $" + offset + ",1,gosub$", "deltaInst": 2};
+		}],
 
 		["1011010", function(mCode1, mCode2) { // PUSH
 			var regs = mCode1 & 0x1ff;
@@ -146,7 +189,7 @@ window.onload = function() {
 	];
 
 	function valueToString(value, radix = 10, digit = 0) {
-		var result = value.toString(radix);
+		var result = value.toString(radix).toUpperCase();
 		while (result.length < digit) result = "0" + result;
 		return result;
 	}
@@ -176,7 +219,7 @@ window.onload = function() {
 		var machineCodes = [];
 		if (memWrites.length > 0) {
 			var addr = memWrites[0][0];
-			if (addr & 1) addr--;
+			addr -= addr & 3; // 4バイトアライメントにする
 			for (var i = 0; i < memWrites.length;) {
 				if (memWrites[i][0] === addr) {
 					if (i + 1 < memWrites.length && memWrites[i + 1][0] === addr + 1) {
@@ -199,7 +242,7 @@ window.onload = function() {
 		}
 
 		// ワード列をasm15に変換する
-		var result = "";
+		var result = [];
 		for (var i = 0; i < machineCodes.length;) {
 			var asmInst = null;
 			var deltaInst = 0;
@@ -227,8 +270,7 @@ window.onload = function() {
 							} else {
 								asmInst += pLeft.substr(0, next);
 								pLeft = pLeft.substr(next + 1);
-								// 将来フォーマットが複数になったら、正規表現が使えるsearchを使う
-								var formatEnd = pLeft.indexOf("u");
+								var formatEnd = pLeft.search(/[ud]/);
 								if (formatEnd < 0) {
 									asmInst += "%" + pLeft;
 									break;
@@ -240,9 +282,14 @@ window.onload = function() {
 									var startBit = formatData.length > 0 ? parseInt(formatData[0]) : 0;
 									var bitLength = formatData.length > 1 ? parseInt(formatData[1]) : 0;
 									var offset = formatData.length > 2 ? parseInt(formatData[2]) : 0;
-									if (formatKind === "u") {
-										var value = ((machineCodes[i] >> startBit) & ((1 << bitLength) - 1)) + offset;
-										asmInst += valueToString(value, 10);
+									if (formatKind === "u" || formatKind === "d") {
+										var value = ((machineCodes[i] >> startBit) + offset) & ((1 << bitLength) - 1);
+										if (formatKind !== "d" || (value >> (bitLength - 1)) === 0) {
+											asmInst += valueToString(value, 10);
+										} else {
+											var value2 = value - (1 << bitLength);
+											asmInst += "-" + valueToString(-value2, 10);
+										}
 									} else {
 										asmInst += formatStr;
 									}
@@ -259,11 +306,71 @@ window.onload = function() {
 				asmInst = "DATAW #" + valueToString(machineCodes[i], 16, 4);
 				deltaInst = 1;
 			}
-			result += "\t" + asmInst + "\n";
+			result.push([i, asmInst]);
 			i += deltaInst;
 		}
 
+		// ラベルの処理を行う
+		var definedLabels = {};
+		var usedLabels = {};
+		// 定義可能なラベルを登録する
+		for (var i = 0; i < result.length; i++) {
+			definedLabels[result[i][0]] = true;
+		}
+		// 置き換えられるオフセットをラベルに書き換え、使われているラベルを記録する
+		for (var i = 0; i < result.length; i++) {
+			var leftSegment = result[i][1];
+			var processResult = "";
+			for (;;) {
+				var idx = leftSegment.indexOf("$");
+				if (idx < 0) {
+					processResult += leftSegment;
+					break;
+				} else {
+					processResult += leftSegment.substr(0, idx);
+					leftSegment = leftSegment.substr(idx + 1);
+					var idx2 = leftSegment.indexOf("$");
+					if (idx2 < 0) {
+						processResult += "$" + leftSegment;
+						break;
+					} else {
+						var data = leftSegment.substr(0, idx2).split(",");
+						leftSegment = leftSegment.substr(idx2 + 1);
+						var offset = data.length > 0 ? parseInt(data[0]) : 0;
+						var multiplier = data.length > 1 ? parseInt(data[1]) : 1;
+						var mode = data.length > 2 ? data[2] : "goto";
+						var targetAddress =
+							(result[i][0] & ~((1 << (multiplier - 1)) - 1)) +
+							multiplier * offset;
+						if (targetAddress in definedLabels) {
+							usedLabels[targetAddress] = true;
+							processResult += "@L" + valueToString(targetAddress * 2 + 0x700, 16);
+						} else {
+							if (mode === "gosub") {
+								processResult += valueToString(offset * 2, 10);
+							} else if (mode === "mov") {
+								processResult += "PC + " +  valueToString(offset, 10);
+							} else if (mode === "mem") {
+								processResult += valueToString(offset, 10);
+							} else { // "goto"
+								processResult += valueToString(offset, 10);
+							}
+						}
+					}
+				}
+			}
+			result[i][1] = processResult;
+		}
+		// 使われているラベルを出力しつつ、コードを書き出す
+		var resultStr = "";
+		for (var i = 0; i < result.length; i++) {
+			if (result[i][0] in usedLabels) {
+				resultStr += "@L" + valueToString(result[i][0] * 2 + 0x700, 16) + "\n";
+			}
+			resultStr += "\t" + result[i][1] + "\n";
+		}
+
 		// 結果を書き出す
-		document.getElementById("disasm").value = result;
+		document.getElementById("disasm").value = resultStr;
 	};
 };
