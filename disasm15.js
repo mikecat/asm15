@@ -285,12 +285,15 @@ window.onload = function() {
 									console.log(formatData);
 									console.log(offset);
 									if (formatKind === "u" || formatKind === "d") {
-										var value = ((machineCodes[i] >> startBit) & ((1 << bitLength) - 1)) + offset;
-										if (formatKind !== "d" || (value >> (bitLength - 1)) === 0) {
+										var value = ((machineCodes[i] >> startBit) & ((1 << bitLength) - 1));
+										if (formatKind === "d" && (value >> (bitLength - 1)) !== 0) {
+											value = value - (1 << bitLength);
+										}
+										value += offset;
+										if (value >= 0) {
 											asmInst += valueToString(value, 10);
 										} else {
-											var value2 = value - (1 << bitLength);
-											asmInst += "-" + valueToString(-value2, 10);
+											asmInst += "-" + valueToString(-value, 10);
 										}
 									} else {
 										asmInst += formatStr;
