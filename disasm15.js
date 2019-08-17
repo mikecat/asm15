@@ -5,7 +5,13 @@ window.onload = function() {
 	// マッチするものがなければ、DATAWを出力する
 	// [上位パターン, 変換先]
 	// 変換先は文字列または関数
-	// 関数の仕様: TBD
+	// 関数の仕様:
+	//   引数 : (mCode1, mCode2)
+	//     mCode1 : 現在の位置の機械語ワード
+	//     mCode2 : 次の位置の機械語ワード (無い場合は0)
+	//   戻り値 : オブジェクト
+	//     inst      : 変換結果のアセンブリ言語コード
+	//     deltaInst : 機械語ワードを何個消費したか
 
 	// 整数用フォーマット指定子
 	// %<start-bit>,<bit-length>[,<offset>]<format>
@@ -65,8 +71,30 @@ window.onload = function() {
 		// TODO: 分岐系
 		["0100011101110000", "RET"], // 暫定 (TODO: GOTO Rmにマージ)
 
-		// TODO: PUSH
-		// TODO: POP
+		["1011010", function(mCode1, mCode2) { // PUSH
+			var regs = mCode1 & 0x1ff;
+			if (regs === 0) {
+				return {"inst": null, "deltaInst": 0};
+			}
+			var regsStr = "";
+			for (var i = 0; i <= 7; i++) {
+				if ((regs >> i) & 1) regsStr += ",R" + i;
+			}
+			if (regs & 0x100) regsStr += ",LR";
+			return {"inst": "PUSH {" + regsStr.substr(1) + "}", "deltaInst": 1};
+		}],
+		["1011110", function(mCode1, mCode2) { // POP
+			var regs = mCode1 & 0x1ff;
+			if (regs === 0) {
+				return {"inst": null, "deltaInst": 0};
+			}
+			var regsStr = "";
+			for (var i = 0; i <= 7; i++) {
+				if ((regs >> i) & 1) regsStr += ",R" + i;
+			}
+			if (regs & 0x100) regsStr += ",PC";
+			return {"inst": "POP {" + regsStr.substr(1) + "}", "deltaInst": 1};
+		}],
 		["101100000", "SP += %0,7u"],
 		["101100001", "SP -= %0,7u"],
 		["10101", "R%8,3u = SP + %0,8u"],
@@ -87,8 +115,28 @@ window.onload = function() {
 		["0100000101", "ADC R%0,3u, R%3,3u"],
 		["0100000110", "SBC R%0,3u, R%3,3u"],
 
-		// TODO: LDM
-		// TODO: STM
+		["11001", function(mCode1, mCode2) { // LDM
+			var regs = mCode1 & 0xff;
+			if (regs === 0) {
+				return {"inst": null, "deltaInst": 0};
+			}
+			var regsStr = "";
+			for (var i = 0; i <= 7; i++) {
+				if ((regs >> i) & 1) regsStr += ",R" + i;
+			}
+			return {"inst": "LDM R" + ((mCode1 >> 8) & 7) + ", {" + regsStr.substr(1) + "}", "deltaInst": 1};
+		}],
+		["11000", function(mCode1, mCode2) { // STM
+			var regs = mCode1 & 0xff;
+			if (regs === 0) {
+				return {"inst": null, "deltaInst": 0};
+			}
+			var regsStr = "";
+			for (var i = 0; i <= 7; i++) {
+				if ((regs >> i) & 1) regsStr += ",R" + i;
+			}
+			return {"inst": "STM R" + ((mCode1 >> 8) & 7) + ", {" + regsStr.substr(1) + "}", "deltaInst": 1};
+		}],
 
 		["1011011001110010", "CPSID"],
 		["1011011001100010", "CPSIE"],
@@ -162,7 +210,12 @@ window.onload = function() {
 				if (machineInst.substr(0, puttern.length) === puttern) {
 					var conversion = convertList[j][1];
 					if (typeof(conversion) === "function") {
-						// 未実装
+						var mCode2 = (i + 1 < machineCodes.length ? machineCodes[i + 1] : 0);
+						var res = conversion(machineCodes[i], mCode2);
+						if (res.inst !== null) {
+							asmInst = res.inst;
+							deltaInst = res.deltaInst;
+						}
 					} else {
 						asmInst = "";
 						var pLeft = "" + conversion;
