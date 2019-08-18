@@ -172,10 +172,6 @@ makeTable("t1188b2", function() {/*
 Rd = REV(Rm)	1	0	1	1	1	0	1	0	0	0	Rm			Rd			1	-
 Rd = REV16(Rm)	1	0	1	1	1	0	1	0	0	1	Rm			Rd			1	-
 Rd = REVSH(Rm)	1	0	1	1	1	0	1	0	1	1	Rm			Rd			1	-
-Rd = SXTB(Rm)	1	0	1	1	0	0	1	0	0	1	Rm			Rd			1	-
-Rd = SXTH(Rm)	1	0	1	1	0	0	1	0	0	0	Rm			Rd			1	-
-Rd = UXTB(Rm)	1	0	1	1	0	0	1	0	1	1	Rm			Rd			1	-
-Rd = UXTH(Rm)	1	0	1	1	0	0	1	0	1	0	Rm			Rd			1	-
 Rd = ASR(Rm, u5)	0	0	0	1	0	u5					Rm			Rd			1	N Z C
 ASR Rd, Rs	0	1	0	0	0	0	0	1	0	0	Rs			Rd			1	N Z C
 BIC Rd, Rm	0	1	0	0	0	0	1	1	1	0	Rm			Rd			1	N Z
@@ -186,41 +182,8 @@ SBC Rd, Rm	0	1	0	0	0	0	0	1	1	0	Rm			Rd			1	N Z C V
 </script>
 ※BIC:ビットクリア、ASR:符号付き右シフト、ROR:右ローテート<br>
 ※REV:byteオーダー反転、REV16:byteオーダー反転(2byteずつ)、REVSH:符号付き16bitを反転32bit化<br>
-※SXTB:1byteから符号拡張、SXTH:2byteから符号拡張、UXTB:1byteからゼロ拡張、UXTH:2byteからゼロ拡張<br>
 ※ADC:キャリー付き足し算、SBC:キャリー付き引き算<br>
 ※シフト/ローテート演算: シフト量が0のときはCフラグを変更しない<br>
-
-<!--
-SXTB, SXTH, UXTB, UXTH 命令に対応するマシン語は、Raspbian上のasおよびobjdumpの出力から推測した。
-1. 以下のファイルtest.sを用意した。
-
-SXTB R1, R4
-SXTB R6, R3
-SXTH R1, R4
-SXTH R6, R3
-UXTB R1, R4
-UXTB R6, R3
-UXTH R1, R4
-UXTH R6, R3
-
-2. 以下のコマンドを入力した。
-
-$ as -mthumb -o test.o test.s
-$ objdump -d test.o
-
-3. 以下の逆アセンブル結果を得た。
-
-00000000 <.text>:
-   0:   b261            sxtb    r1, r4
-   2:   b25e            sxtb    r6, r3
-   4:   b221            sxth    r1, r4
-   6:   b21e            sxth    r6, r3
-   8:   b2e1            uxtb    r1, r4
-   a:   b2de            uxtb    r6, r3
-   c:   b2a1            uxth    r1, r4
-   e:   b29e            uxth    r6, r3
-
--->
 
 <table id="t1479d" class=tarmasm></table>
 <script>
@@ -237,17 +200,32 @@ STM Rn, {regs}	1	1	0	0	0	Rn			R7	R6	R5	R4	R3	R2	R1	R0	1+N	-
 <table id="t1479c" class=tarmasm></table>
 <script>
 makeTable("t1479c", function() {/*
+符号拡張	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	cycles	flags
+Rd = SXTH(Rm)	1	0	1	1	0	0	1	0	0	0	Rm			Rd			1	-
+Rd = SXTB(Rm)	1	0	1	1	0	0	1	0	0	1	Rm			Rd			1	-
+Rd = UXTH(Rm)	1	0	1	1	0	0	1	0	1	0	Rm			Rd			1	-
+Rd = UXTB(Rm)	1	0	1	1	0	0	1	0	1	1	Rm			Rd			1	-
+*/})
+</script>
+※ SXTH(16→32bit shortへのキャスト)、SXTB(8→32bit charへのキャスト)、UXTH(16→32bit、ゼロ拡張)、UXTB(8→32bit、ゼロ拡張）
+
+<table id="t1479e" class=tarmasm></table>
+<script>
+makeTable("t1479e", function() {/*
 その他	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	cycles	flags
 NOP (=#46C0)	0	1	0	0	0	1	1	0	1	1	0	0	0	0	0	0	1	-
 CPSID (=#B672)	1	0	1	1	0	1	1	0	0	1	1	1	0	0	1	0	1	-
 CPSIE (=#B662)	1	0	1	1	0	1	1	0	0	1	1	0	0	0	1	0	1	-
 WFI (=#BF30)	1	0	1	1	1	1	1	1	0	0	1	1	0	0	0	0	2	-
-BKPT u8	1	0	1	1	1	1	1	0	u8								※	-
-SVC u8	1	1	0	1	1	1	1	1	u8								※	-
+YIELD	1	0	1	1	1	1	1	1	0	0	0	1	0	0	0	0	1	-
+WFE	1	0	1	1	1	1	1	1	0	0	1	0	0	0	0	0	2	-
+SEV	1	0	1	1	1	1	1	1	0	1	0	0	0	0	0	0	1	-
+SVC	1	1	0	1	1	1	1	1	u8								-	-
+BKPT	1	0	1	1	1	1	1	0	u8								-	-
 */})
 </script>
-※CPSID:割込禁止、CPSIE:割込許可、WFI:割込待ち、NOP:なにもしない(no operation) R8=R8<br>
-※BKPT,SVCのサイクル数は設定による<br>
+※CPSID:割込禁止、CPSIE:割込許可、WFI:割込待ち、NOP:なにもしない(no operation) R8=R8、SVC スーパーバイザーコール<br>
+※SEV:イベント送信、WFE:イベント待ち、YIELD:NOPとして実行(?)<br>
 
 <table id="tunknown" class=tarmasm></table>
 <script>
@@ -258,15 +236,11 @@ DSB	?																4	-
 ISB	?																4	-
 Rd = spec_reg	?																4	-
 spec_reg = Rd	?																4	※
-SEV	?																1	-
-WFE	?																2	-
-YIELD	?																1	-
 */})
 </script>
 ※spec_reg:APSR/IPSR/EPSR/IEPSR/IAPSR/EAPSR/PSR/MSP/PSP/PRIMASK/CONTROL<br>
 ※APSRへの書き込みは、フラグを変更する<br>
 ※DMB:データメモリバリア、DSB:データ同期バリア、ISB:命令同期バリア<br>
-※SEV:イベント送信、WFE:イベント待ち、YIELD:NOPとして実行(?)<br>
 
 <table id="tflags" class="tarmasm lastleft"></table>
 <script>
@@ -304,9 +278,6 @@ makeTable("tconds", function() {/*
 <!--
 todo
 分岐の種類を増やす
-
-		符号拡張を追加
-		SXTB(8), SXTH(16), UXTB(8), UXTH(16) -- extend to 32bit
 		
 		データバリアを追加
 		DMB(t2), DSB(t2), ISB(t2) -- data barrier
@@ -315,20 +286,6 @@ todo
 		MRS(t2) 特殊アドレス読込, MSR(t2) 特殊アドレスへ書き込み
 			APSR IAPSR EAPSR XPSR IPSR EPSR IEPSR MSP PSP PRIMASK CONTROL
 		
-		その他命令
-		デバッグ用
-		BKPT -- break point
-		スーパーバイザーコール（割込？）
-		SVC -- supervisor call
-
-		YIELD, 
-		
-		SEV -- send event
-		WFE -- wait for event
-		
-		CPS -- change processor state CPSID/CPSIE
-		WFI -- wait for interrupt
-		NOP, 
 -->
 </p><p>
 - マシン語関連ツール<br>
