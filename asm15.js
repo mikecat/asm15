@@ -227,15 +227,17 @@ var cmdlist = [
 ["reg = rev16 ( reg )",0xba40,b(3,0),b(3,3)],
 ["reg = revsh ( reg )",0xbac0,b(3,0),b(3,3)],
 ["reg = asr ( reg , n )",0x1000,b(3,0),b(3,3),b(5,6,0)],
-["reg = sxtb ( reg )",0xb240,b(3,0),b(3,3)],
-["reg = sxth ( reg )",0xb200,b(3,0),b(3,3)],
-["reg = uxtb ( reg )",0xb2c0,b(3,0),b(3,3)],
-["reg = uxth ( reg )",0xb280,b(3,0),b(3,3)],
 ["asr reg , reg",0x4100,b(3,0),b(3,3)],
 ["ror reg , reg",0x41c0,b(3,0),b(3,3)],
 ["bic reg , reg",0x4380,b(3,0),b(3,3)],
 ["adc reg , reg",0x4140,b(3,0),b(3,3)],
 ["sbc reg , reg",0x4180,b(3,0),b(3,3)],
+
+//extension
+["reg = sxtb ( reg )",0xb240,b(3,0),b(3,3)],
+["reg = sxth ( reg )",0xb200,b(3,0),b(3,3)],
+["reg = uxtb ( reg )",0xb2c0,b(3,0),b(3,3)],
+["reg = uxth ( reg )",0xb280,b(3,0),b(3,3)],
 
 //jmp
 ["if 0 goto n",0xd000,n(8,0,-2,1)],
