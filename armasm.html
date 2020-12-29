@@ -57,7 +57,8 @@ Rd = u8	0	0	1	0	0	Rd			u8								1	N Z
 Rd = Rm	0	1	0	0	0	1	1	0	Rd3	Rm				Rd2-0			1,3	-
 */})
 </script>
-※Rd3とRd2-0の4bitでRdを指定する、RdがPCの時3cycles
+※Rd3とRd2-0の4bitでRdを指定する、RdがPCの時3cycles<br>
+※Rd = Rm はフラグ変化なし（R0-R7で、Rd = Rm + 0 はフラグ変化する）
 
 <table id="t1188b" class=tarmasm></table>
 <script>
@@ -85,7 +86,8 @@ Rd ^= Rm	0	1	0	0	0	0	0	0	0	1	Rm			Rd			1	N Z
 </script>
 ※Rd3とRd2-0の4bitでRdを指定する、Rd=PCの時3cycles<br>
 ※Rd=PC+u8: u8は4byte単位<br>
-※シフト演算: シフト量が0のときはCフラグを変更しない
+※シフト演算: シフト量が0のときはCフラグを変更しない<br>
+※Rd += Rm はフラグ変化なし（Rd = Rd + Rm はフラグ変化する）
 
 <table id="t1479a" class=tarmasm></table>
 <script>
@@ -176,13 +178,13 @@ Rd = ASR(Rm, u5)	0	0	0	1	0	u5					Rm			Rd			1	N Z C
 ASR Rd, Rs	0	1	0	0	0	0	0	1	0	0	Rs			Rd			1	N Z C
 BIC Rd, Rm	0	1	0	0	0	0	1	1	1	0	Rm			Rd			1	N Z
 ROR Rd, Rs	0	1	0	0	0	0	0	1	1	1	Rs			Rd			1	N Z C
-ADC Rd, Rm	0	1	0	0	0	0	0	1	0	1	Rm			Rd			1	N Z C V
-SBC Rd, Rm	0	1	0	0	0	0	0	1	1	0	Rm			Rd			1	N Z C V
+Rd += Rm + C	0	1	0	0	0	0	0	1	0	1	Rm			Rd			1	N Z C V
+Rd -= Rd + !C	0	1	0	0	0	0	0	1	1	0	Rm			Rd			1	N Z C V
 */})
 </script>
 ※BIC:ビットクリア、ASR:符号付き右シフト、ROR:右ローテート<br>
 ※REV:byteオーダー反転、REV16:byteオーダー反転(2byteずつ)、REVSH:符号付き16bitを反転32bit化<br>
-※ADC:キャリー付き足し算、SBC:キャリー付き引き算<br>
+※C:キャリーフラグ付き演算(ADC/SBC)<br>
 ※シフト/ローテート演算: シフト量が0のときはCフラグを変更しない<br>
 
 <table id="t1479d" class=tarmasm></table>
@@ -289,23 +291,29 @@ todo
 -->
 </p><p>
 - マシン語関連ツール<br>
+<a href=https://fukuno.jig.jp/app/IchigoJam/>IchigoJam web - マシン語対応</a><br>
 <a href=index.html>asm15</a> - Assembler for IchigoJam<br>
 <a href=cpuemu.html>cpuemu15</a> - IchigoJam マシン語エミュレーター alpha1 (<a href="http://fukuno.jig.jp/1328">説明</a>)<br>
 <a href=armasm.pdf>armasm.pdf</a> - このドキュメントのPDF版<br>
+<a href=rvasm.html>RV32C RISC-Vマシン語表(asm15r)</a><br>
 </p><p>
 - 連載、IchigoJamではじめる、Armマシン語入門<br>
-<a href=http://fukuno.jig.jp/1184>1. はじめてのマシン語</a><br>
-<a href=http://fukuno.jig.jp/1186>2. ハンドアセンブルで超速計算！</a><br>
-<a href=http://fukuno.jig.jp/1188>3. マシン語メモリアクセスで画面超速表示！</a><br>
-<a href=http://fukuno.jig.jp/1476>4. マシン語でLEDを光らせよう！</a><br>
-<a href=http://fukuno.jig.jp/1479>5. 楽しさ広がるマルチバイトメモリアクセスとスタック</a><br>
-<a href=http://fukuno.jig.jp/1484>6. マシン語使いこなしTIPS</a><br>
-<a href=http://fukuno.jig.jp/1485>7. カジュアルに使うインラインマシン語</a><br>
-<a href=http://fukuno.jig.jp/1757>8. アセンブラを使って楽しよう</a><br>
-<a href=http://fukuno.jig.jp/1849>9. マシン語で高速SPI</a><br>
-<a href=http://fukuno.jig.jp/1872>10. マシン語を制するもの時間を制す</a><br>
-<a href=http://fukuno.jig.jp/1889>11. 画面をイチゴで埋め尽くす12の方法</a><br>
-<a href=http://fukuno.jig.jp/2035>12. レジスタ不足に上位レジスタとスタック操作</a><br>
+<a href=https://fukuno.jig.jp/1184>1. はじめてのマシン語</a><br>
+<a href=https://fukuno.jig.jp/1186>2. ハンドアセンブルで超速計算！</a><br>
+<a href=https://fukuno.jig.jp/1188>3. マシン語メモリアクセスで画面超速表示！</a><br>
+<a href=https://fukuno.jig.jp/1476>4. マシン語でLEDを光らせよう！</a><br>
+<a href=https://fukuno.jig.jp/1479>5. 楽しさ広がるマルチバイトメモリアクセスとスタック</a><br>
+<a href=https://fukuno.jig.jp/1484>6. マシン語使いこなしTIPS</a><br>
+<a href=https://fukuno.jig.jp/1485>7. カジュアルに使うインラインマシン語</a><br>
+<a href=https://fukuno.jig.jp/1757>8. アセンブラを使って楽しよう</a><br>
+<a href=https://fukuno.jig.jp/1849>9. マシン語で高速SPI</a><br>
+<a href=https://fukuno.jig.jp/1872>10. マシン語を制するもの時間を制す</a><br>
+<a href=https://fukuno.jig.jp/1889>11. 画面をイチゴで埋め尽くす12の方法</a><br>
+<a href=https://fukuno.jig.jp/2035>12. レジスタ不足に上位レジスタとスタック操作</a><br>
+<a href=https://fukuno.jig.jp/2493>13. コンパイラはじめのいっぽ、EVAL実現法とマシン語生成</a><br>
+<a href=https://fukuno.jig.jp/2494>14. サイズを取るかスピードを取るか、割り算のアルゴリズムとマシン語実装</a><br>
+<a href=https://fukuno.jig.jp/2495>15. マシン語化で1万倍速!? セットで学ぶアルゴリズムとコンピューター</a><br>
+<a href=https://fukuno.jig.jp/2942>16. フラグ活用テクニック、オールマシン語74byteで作る「かわくだりゲーム」</a><br>
 <!--
 クロックを意識して特殊演算
 	4byte rotate
@@ -318,7 +326,7 @@ todo
 DATA: <a href=https://www.arm.com/ja/products/processors/cortex-m/cortex-m0.php>Cortex-M0プロセッサ - Arm</a> (<a href=http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0432c/CHDCICDF.html>cycles</a>),
 <a href="https://www.nxp.com/docs/en/user-guide/UM10398.pdf">UN10398 LPC111x/LPC11Cxx User manual</a>,
 <a href="http://www.coranac.com/files/gba/re-ejected-thumbref2.pdf">Thumb Cramsheet v2</a><br>
-<a href="https://ichigojam.github.io/asm15/armasm.html">Original</a> Text: CC BY <a href=http://ichigojam.net/>ichigojam.net</a><br>
+<a href="https://ichigojam.github.io/asm15/armasm.html">Original</a> Text: CC BY <a href=https://ichigojam.net/>ichigojam.net</a><br>
 Modified By みけCAT<br>
 Modification: <a href="https://creativecommons.org/licenses/by/4.0/deed.ja">CC BY 4.0</a> by みけCAT
 <!--

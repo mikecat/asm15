@@ -7,6 +7,7 @@ var ASMERR    = 0x100000000 + 4;
 var LABEL     = 0x100000000 + 5;
 
 var lbl_dict = {};
+// var lbl_align4 = [];
 
 var token_dict = {
 "rlist":"\\{(.+)\\}",
@@ -31,7 +32,7 @@ var token_dict = {
 "^":"\\^",
 "not":"(?:\\~|not)",
 
-"cond":"(eq|ne|cs|cc|mi|pl|vs|vc|hi|ls|ge|lt|gt|le)",
+"cond":"(eq|ne|cs|cc|mi|pl|vs|vc|hi|ls|ge|lt|gt|le|hs|lo)",
 "al":"al",
 
 "*":"\\*",
@@ -140,7 +141,11 @@ function n(bits, s, ofs, div, align4) {
 				if (lbl in lbl_dict) {
 					var adl = lbl_dict[lbl];
 					var ad = adl - (pc & 0x0fffffffe);
+					if (align4 && ad < 0) {
+						throw new Error("can't use minus address");
+					}
 					if (align4) { // 追加 r0=[sp+n] のとき (バグ修正)
+						//lbl_align4.push(lbl);
 						if (adl % 4 == 2) {
 							ad += 2;
 						}
@@ -176,7 +181,7 @@ function b(bits, s, ofs, chk) {
 		d = pint(d);
 		if (chk) {
 			if (d & ~mask) {
-				throw "over!";
+				throw new Error("over!");
 			}
 		}
 		return (d & mask) << s;
@@ -203,6 +208,11 @@ function bl(bits,s,ofs){
 }
 function cond(ofs, invert) {
 	var f = function(d, pc) {
+		if (d == "hs") {
+			d = "cs";
+		} else if (d == "lo") {
+			d = "cc";
+		}
 		var n = "eq|ne|cs|cc|mi|pl|vs|vc|hi|ls|ge|lt|gt|le".indexOf(d) / 3;
 		if (invert)
 			n ^= 1;
@@ -234,7 +244,9 @@ var cmdlist = [
 ["ror reg , reg",0x41c0,b(3,0),b(3,3)],
 ["bic reg , reg",0x4380,b(3,0),b(3,3)],
 ["adc reg , reg",0x4140,b(3,0),b(3,3)],
+["reg + = reg + c",0x4140,b(3,0),b(3,3)],
 ["sbc reg , reg",0x4180,b(3,0),b(3,3)],
+["reg - = reg + ! c",0x4180,b(3,0),b(3,3)],
 
 //extension
 ["reg = sxtb ( reg )",0xb240,b(3,0),b(3,3)],
@@ -397,7 +409,7 @@ function asmln(ln, prgctr) {
 	for (var j = 0; j < patlist.length; j++) {
 		var m = ln.match(patlist[j]);
 		if (m) {
-			//console.log(patlist[j] + " " + m);
+			// console.log(patlist[j] + " " + m);
 			var p = build_m(cmdlist[j], m, prgctr);
 			return p;
 		}
@@ -440,25 +452,26 @@ function pdat(ln,pc){
 		d=pint(dlist[i]);
 		ret.push(d&msk);
 	}
-	var _ret;
+				
+	var _ret = ret;
+	ret = [];
+
+	//align
+	if (pc % 4 == 2) {
+		ret.unshift(0);
+	};
 	if (sz==1) {
-		_ret=ret
-		ret=[];
 		if(_ret.length%2){
 			_ret.push(0);
 		};
 		for(i=0;i<_ret.length;i+=2){
 			ret.push(_ret[i]|(_ret[i+1]<<8));
 		}
+	} else if (sz == 2){
+		for(i=0;i<_ret.length;i++) {
+			ret.push(_ret[i]);
+		}
 	} else if (sz == 4){
-		_ret=ret;
-		ret = [];
-		//align
-		if (pc % 4 == 2) {
-//			ret.unshift(0xffff);
-			ret.unshift(0);
-		};
-		
 		for (i = 0; i < _ret.length; i++){
 			ret.push(_ret[i] & 0xffff);
 			ret.push((_ret[i] >> 16) & 0xffff);
@@ -502,6 +515,7 @@ var bas = "";
 var outlist = [];
 function assemble() {
 	lbl_dict = {};
+	//lbl_align4 = [];
 	outlist = [];
 	var prgctr = 0;
 	dom_src=document.getElementById("textarea1");
@@ -531,6 +545,15 @@ function assemble() {
 		lines[i] = line;
 
 		if (line.charAt(0) == "@") {
+			/*
+			console.log("@put ", line, prgctr, lbl_align4);
+			if (lbl_align4.indexOf(line) >= 0) {
+					if (prgctr % 4 == 2) {
+					outlist.push([i, prgctr, 0]);
+					prgctr += 2;
+				}
+			}
+			*/
 			lbl_dict[cutComment(line)] = prgctr;
 			outlist.push([i,prgctr,LABEL]);
 			continue;
@@ -570,7 +593,7 @@ function assemble() {
 					throw line; // alert("asm error: " + line);
 				}
 			} catch (e) {
-				alert("asm error in " + (i + 1) + "\n" + orglines[i]);
+				alert("asm error in " + (i + 1) + "\n" + orglines[i] + "\n" + e);
 			}
 		}
 	}
@@ -606,6 +629,7 @@ function assemble() {
 			}
 		}
 	}
+	//console.log(outlist);
 	bas = fm2b(lines, outlist);
 	dom_hex.value = bas;
 	binsize.textContent = getSize(lines, outlist);
