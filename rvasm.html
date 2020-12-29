@@ -106,7 +106,7 @@ Rd' = [Rn' + u7]L	0	1	0	u5-3			Rn'			u2	u6	Rd'			0	0	c.lw
 */})
 </script>
 ※[]後の記号でメモリサイズと符号を表す（W:2byte、L:4byte、C:符号付き1byte、S:符号付き2byte）<br>
-※u7 u1-0は0<br>
+※u7:4byte単位のオフセット<br>
 
 <table id="t1188d" class=tarmasm></table>
 <script>
@@ -119,13 +119,8 @@ GOTO Rs	1	0	0	0	Rs					0	0	0	0	0	1	0	c.jr
 GOSUB Rs	1	0	0	1	Rs					0	0	0	0	0	1	0	c.jalr
 RET (=GOTO R1)	1	0	0	0	0	0	0	0	1	0	0	0	0	0	1	0	c.ret?
 */})
-/*
-本来はn24だけど、n22としておく、n22からn24に拡張された後がある
-CALL n24 &lt;&lt; 1	1	1	1	1	0	S	n24(20-11)										-
--	1	1	J1	1	J2	n24(10-0)											4
-*/
 </script>
-※n12:飛び先とのバイト数の差分（n11でn12の1/2の値で指定）<br>
+※n12:飛び先とのハーフワード(2byte)数の差分<br>
 
 <table id="t1479b" class=tarmasm></table>
 <script>
@@ -137,7 +132,8 @@ Rd' = SP + u10	0	0	0	u5-4		u9-6				u2	u3	Rd'			0	0	c.addi4spn
 SP += n10	0	1	1	n9	0	0	0	1	0	n4	n6	n8-7		n5	0	1	c.addi16sp
 */})
 </script>
-※n8:4byte単位のオフセット<br>
+※n8,u10:4byte単位のオフセット<br>
+※n10:16byte単位<br>
 ※SP = R2<br>
 
 <table id="t1479e" class=tarmasm></table>
@@ -152,18 +148,6 @@ WFI	0	0	0	0	0	0	0	0	0	1	1	1	0	0	1	1	wfi
 </script>
 ※NOP:なにもしない(no operation) R0+=0<br>
 
-<!--
-todo
-分岐の種類を増やす
-		
-		データバリアを追加
-		DMB(t2), DSB(t2), ISB(t2) -- data barrier
-		
-		特殊アドレスを追加
-		MRS(t2) 特殊アドレス読込, MSR(t2) 特殊アドレスへ書き込み
-			APSR IAPSR EAPSR XPSR IPSR EPSR IEPSR MSP PSP PRIMASK CONTROL
-		
--->
 </p><p>
 <a href=https://fukuno.jig.jp/2720>比べてみよう、RISC-VとArm、RISC-V対応かんたんマシン語「asm15r」</a><br>
 <a href=armasm.html>Cortex-M0 Armマシン語表(asm15)</a><br>
