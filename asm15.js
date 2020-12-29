@@ -14,6 +14,7 @@ var token_dict = {
 "label":"(@.+)",
 "h":"r(8|9|10|11|12|13|14|15)",
 "reg":"r([0-7])",
+"reg32":"r([0-9]|[12][0-9]|3[01])",
 "push":"push",
 "pop":"pop",
 "ldm":"ldm",
@@ -264,7 +265,7 @@ function build_m(f, ar, pc) {
 	}
 }
 
-var cmdlist = [
+var cmdlist_m0 = [
 //special
 ["reg = rev ( reg )",0xba00,b(3,0),b(3,3)],
 ["reg = rev16 ( reg )",0xba40,b(3,0),b(3,3)],
@@ -397,10 +398,22 @@ var cmdlist = [
 
 ];
 
-var patlist = [];
-for (var i = 0; i < cmdlist.length; i++){
-	patlist.push(patfactory(cmdlist[i][0]));
+var cmdlist_rv32c = [
+["reg32 + = n",0x0001,b(5,7),b(5,2)],
+["ret",0x8082],
+
+];
+
+var patlist_m0 = [];
+var patlist_rv32c = [];
+for (var i = 0; i < cmdlist_m0.length; i++){
+	patlist_m0.push(patfactory(cmdlist_m0[i][0]));
 }
+for (var i = 0; i < cmdlist_rv32c.length; i++){
+	patlist_rv32c.push(patfactory(cmdlist_rv32c[i][0]));
+}
+
+var cmdlist, patlist;
 
 //
 function getSize(lines, outlist){
@@ -519,6 +532,13 @@ function assemble() {
 	//lbl_align4 = [];
 	outlist = [];
 	var prgctr = 0;
+	if (document.getElementById("rv32c_check").checked) {
+		cmdlist = cmdlist_rv32c;
+		patlist = patlist_rv32c;
+	} else {
+		cmdlist = cmdlist_m0;
+		patlist = patlist_m0;
+	}
 	dom_src=document.getElementById("textarea1");
 	dom_fmt=document.getElementById("selfmt");
 	dom_hex=document.getElementById("textarea2");
