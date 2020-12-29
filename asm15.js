@@ -227,8 +227,6 @@ function d(func, plist) {
 		if (value >= NOTOPCODE) {
 			return value;
 		}
-		console.log(value.toString(16));
-		console.log(plist);
 		var ret = 0;
 		for (var i = 0; i < plist.length; i++) {
 			ret |= ((value >> plist[i][0]) & ((1 << plist[i][2]) - 1)) << plist[i][1];
@@ -512,36 +510,6 @@ function pdat(ln,pc){
 	}
 	return ret
 
-}
-function sublbl(d,pc){
-	var ret,lbl,i;
-	ret=d.match(/@\w+/g);
-	if (ret!=null){
-		for(i=0;i<ret.length;i++){
-			lbl = ret[i];
-			if (lbl in lbl_dict) {
-				rel = lbl_dict[lbl] - pc;
-				d = d.replace(lbl, rel, "g")
-			} else {
-				return YET;
-			}
-		}
-	}
-	d = pint(d);
-	return d;
-}
-function gsb(d,pc) {
-	var rel = sublbl(d,pc);
-	var ret;
-	if (rel == YET) {
-		ret = YET;
-	} else {
-		rel = rel - 4;
-		var h = (rel >> 12) & 0x7ff;
-		var l = (rel >> 1)  & 0x7ff;
-		ret = [0xf000 | h, 0xf800 | l];
-	}
-	return ret;
 }
 
 var bas = "";
