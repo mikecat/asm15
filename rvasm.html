@@ -116,6 +116,7 @@ IF !Rs' GOTO n9	1	1	0	n8	n4-3		Rs'			n7-6		n2-1		n5	0	1	c.beqz
 IF Rs' GOTO n9	1	1	1	n8	n4-3		Rs'			n7-6		n2-1		n5	0	1	c.bnez
 GOTO n12	1	0	1	n11	n4	n9-8		n10	n6	n7	n3-1			n5	0	1	c.j
 GOTO Rs	1	0	0	0	Rs					0	0	0	0	0	1	0	c.jr
+GOSUB n12	0	0	1	n11	n4	n9-8		n10	n6	n7	n3-1			n5	0	1	c.jal
 GOSUB Rs	1	0	0	1	Rs					0	0	0	0	0	1	0	c.jalr
 RET (=GOTO R1)	1	0	0	0	0	0	0	0	1	0	0	0	0	0	1	0	c.ret?
 */})
