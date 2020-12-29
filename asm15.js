@@ -220,18 +220,50 @@ function cond(ofs, invert) {
 	};
 	return f;
 }
+function d(func, plist) {
+	// plist: array of [src_shift,dst_shift,bits]
+	var f = function(d, pc) {
+		var value = func(d, pc);
+		if (value >= NOTOPCODE) {
+			return value;
+		}
+		console.log(value.toString(16));
+		console.log(plist);
+		var ret = 0;
+		for (var i = 0; i < plist.length; i++) {
+			ret |= ((value >> plist[i][0]) & ((1 << plist[i][2]) - 1)) << plist[i][1];
+		}
+		return ret;
+	};
+	return f;
+}
 function build_m(f, ar, pc) {
 	var op = f[1];
-	for (var i = 1; i < ar.length; i++) {
-		//console.log(i + " " + ar[i]);
-		var _op = f[i + 1](ar[i], pc);
-		if (_op >= NOTOPCODE) {
-			return _op;
-		} else {
-			op = op | _op;
+	if (op.length + 1) {
+		// array means 32-bit instruction
+		op = op[0];
+		for (var i = 1; i < ar.length; i++) {
+			//console.log(i + " " + ar[i]);
+			var _op = f[i + 1](ar[i], pc);
+			if (_op >= NOTOPCODE) {
+				return [_op, _op];
+			} else {
+				op = op | _op;
+			}
 		}
+		return [0xffff & op, 0xffff & (op >> 16)];
+	} else {
+		for (var i = 1; i < ar.length; i++) {
+			//console.log(i + " " + ar[i]);
+			var _op = f[i + 1](ar[i], pc);
+			if (_op >= NOTOPCODE) {
+				return _op;
+			} else {
+				op = op | _op;
+			}
+		}
+		return 0xffff & op;
 	}
-	return 0xffff & op;
 }
 
 var cmdlist = [
@@ -268,6 +300,7 @@ var cmdlist = [
 ["gosub reg",0x4780,b(3,3)],
 ["gosub h",0x47C0,b(3,3)], // 追加 GOSUB == CALL
 ["goto n",0xe000,n(11,0,-2,1)], // div 2->1
+["gosub n",[0xf800f000],d(n(22,0,-2,1),[[0,16,11],[11,0,11]])],
 
 //sp
 ["sp + = n",0xb000,bu(7,0,0)],
@@ -574,21 +607,17 @@ function assemble() {
 			try {
 				p = asmln(line, prgctr);
 				
-				outlist.push([ i, prgctr, p ]);
 				if (p != undefined) {
-					prgctr += 2;
-				} else if (line.slice(0,4) == "call" || line.slice(0,5) == "gosub") {
-					p = gsb(line.charAt(0) == 'c' ? line.slice(4) : line.slice(5), prgctr);
-					if (p == YET) {
-						p1 = YET;
-						p2 = YET;
+					if (p.length + 1) {
+						// array is returned
+						for (var j = 0; j < p.length; j++) {
+							outlist.push([ i, prgctr, p[j] ]);
+							prgctr += 2;
+						}
 					} else {
-						p1 = p[0];
-						p2 = p[1];
+						outlist.push([ i, prgctr, p ]);
+						prgctr += 2;
 					}
-					outlist.push([i, prgctr, p1]);
-					outlist.push([i, prgctr + 2, p2]);
-					prgctr += 4;
 				} else {
 					throw line; // alert("asm error: " + line);
 				}
@@ -608,19 +637,18 @@ function assemble() {
 		if (p >= NOTOPCODE) {
 		}
 		if (p == YET) {
-			if (line.slice(0,4) == "call" || line.slice(0,5) == "gosub") {
-				p = gsb(line.charAt(0) == 'c' ? line.slice(4) : line.slice(5), prgctr);
-				p1=p[0];
-				p2=p[1];
-				outlist[i]=[lno,prgctr,p1];
-				outlist[i+1]=[lno,prgctr+2,p2];
-				i++;
-				
-				if (p1 == undefined) {
-					alert("label not found in " + lno + "\n" + orglines[lno]);
+			p = asmln(line,prgctr);
+			if (p != undefined && p.length + 1) {
+				// multiple-word instruction
+				for (var j = 0; j < p.length; j++) {
+					outlist[i+j] = [ lno, prgctr+2*j, p[j] ];
+					
+					if (outlist[i+j][2] == YET) {
+						alert("label not found in " + lno + "\n" + orglines[lno]);
+					}
 				}
+				i += p.length - 1;
 			} else {
-				p = asmln(line,prgctr);
 				outlist[i] = [ lno, prgctr, p ];
 				
 				if (outlist[i][2] == YET) {
