@@ -20,7 +20,7 @@ body {
 	margin-top: .5em;
 }
 .tarmasm th:first-child {
-	width: 11em;
+	width: 13em;
 	text-align: left;
 	border: none;
 }
@@ -170,7 +170,7 @@ WFI	0	0	0	0	0	0	0	0	0	1	1	1	0	0	1	1	wfi
 <script>
 makeTable("t9900a", function() {/*
 32bit代入	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	op
-LUI	n15-12				Rd					0	1	1	0	1	1	1	lui
+Rd = n32	n15-12				Rd					0	1	1	0	1	1	1	lui
 	n31-16																-
 */})
 </script>
@@ -179,45 +179,45 @@ LUI	n15-12				Rd					0	1	1	0	1	1	1	lui
 <script>
 makeTable("t9901a", function() {/*
 32bit演算	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	op
-AUIPC	n15-12				Rd					0	0	1	0	1	1	1	auipc
+Rd = PC + n32	n15-12				Rd					0	0	1	0	1	1	1	auipc
 	n31-16																-
-ADDI	Rm0	0	0	0	Rd					0	0	1	0	0	1	1	addi
+Rd = Rm + n12	Rm0	0	0	0	Rd					0	0	1	0	0	1	1	addi
 	n12												Rm4-1				-
-SLTI	Rm0	0	1	0	Rd					0	0	1	0	0	1	1	slti
+Rd = Rm &lt; n12	Rm0	0	1	0	Rd					0	0	1	0	0	1	1	slti
 	n12												Rm4-1				-
-SLTIU	Rm0	0	1	1	Rd					0	0	1	0	0	1	1	sltiu
+Rd = LTU(Rm, n12)	Rm0	0	1	1	Rd					0	0	1	0	0	1	1	sltiu
 	n12												Rm4-1				-
-XORI	Rm0	1	0	0	Rd					0	0	1	0	0	1	1	xori
+Rd = Rm ^ n12	Rm0	1	0	0	Rd					0	0	1	0	0	1	1	xori
 	n12												Rm4-1				-
-ORI	Rm0	1	1	0	Rd					0	0	1	0	0	1	1	ori
+Rd = Rm | n12	Rm0	1	1	0	Rd					0	0	1	0	0	1	1	ori
 	n12												Rm4-1				-
-ANDI	Rm0	1	1	1	Rd					0	0	1	0	0	1	1	andi
+Rd = Rm &amp; n12	Rm0	1	1	1	Rd					0	0	1	0	0	1	1	andi
 	n12												Rm4-1				-
-SLLI	Rm0	0	0	1	Rd					0	0	1	0	0	1	1	slli
+Rd = Rm &lt;&lt; u5	Rm0	0	0	1	Rd					0	0	1	0	0	1	1	slli
 	0	0	0	0	0	0	0	u5					Rm4-1				-
-SRLI	Rm0	1	0	1	Rd					0	0	1	0	0	1	1	srli
+Rd = Rm &gt;&gt; u5	Rm0	1	0	1	Rd					0	0	1	0	0	1	1	srli
 	0	0	0	0	0	0	0	u5					Rm4-1				-
-SRAI	Rm0	1	0	1	Rd					0	0	1	0	0	1	1	srai
+Rd = Rm &gt;&gt;&gt; u5	Rm0	1	0	1	Rd					0	0	1	0	0	1	1	srai
 	0	1	0	0	0	0	0	u5					Rm4-1				-
-ADD	Rm0	0	0	0	Rd					0	1	1	0	0	1	1	add
+Rd = Rm + Rs	Rm0	0	0	0	Rd					0	1	1	0	0	1	1	add
 	0	0	0	0	0	0	0	Rs					Rm4-1				-
-SUB	Rm0	0	0	0	Rd					0	1	1	0	0	1	1	sub
+Rd = Rm - Rs	Rm0	0	0	0	Rd					0	1	1	0	0	1	1	sub
 	0	1	0	0	0	0	0	Rs					Rm4-1				-
-SLL	Rm0	0	0	1	Rd					0	1	1	0	0	1	1	sll
+Rd = Rm &lt;&lt; Rs	Rm0	0	0	1	Rd					0	1	1	0	0	1	1	sll
 	0	0	0	0	0	0	0	Rs					Rm4-1				-
-SLT	Rm0	0	1	0	Rd					0	1	1	0	0	1	1	slt
+Rd = Rm &lt; Rs	Rm0	0	1	0	Rd					0	1	1	0	0	1	1	slt
 	0	0	0	0	0	0	0	Rs					Rm4-1				-
-SLTU	Rm0	0	1	1	Rd					0	1	1	0	0	1	1	sltu
+Rd = LTU(Rm, Rs)	Rm0	0	1	1	Rd					0	1	1	0	0	1	1	sltu
 	0	0	0	0	0	0	0	Rs					Rm4-1				-
-XOR	Rm0	1	0	0	Rd					0	1	1	0	0	1	1	xor
+Rd = Rm ^ Rs	Rm0	1	0	0	Rd					0	1	1	0	0	1	1	xor
 	0	0	0	0	0	0	0	Rs					Rm4-1				-
-SRL	Rm0	1	0	1	Rd					0	1	1	0	0	1	1	srl
+Rd = Rm &gt;&gt; Rs	Rm0	1	0	1	Rd					0	1	1	0	0	1	1	srl
 	0	0	0	0	0	0	0	Rs					Rm4-1				-
-SRA	Rm0	1	0	1	Rd					0	1	1	0	0	1	1	sra
+Rd = Rm &gt;&gt;&gt; Rs	Rm0	1	0	1	Rd					0	1	1	0	0	1	1	sra
 	0	1	0	0	0	0	0	Rs					Rm4-1				-
-OR	Rm0	1	1	0	Rd					0	1	1	0	0	1	1	or
+Rd = Rm | Rs	Rm0	1	1	0	Rd					0	1	1	0	0	1	1	or
 	0	0	0	0	0	0	0	Rs					Rm4-1				-
-AND	Rm0	1	1	1	Rd					0	1	1	0	0	1	1	and
+Rd = Rm &amp; Rs	Rm0	1	1	1	Rd					0	1	1	0	0	1	1	and
 	0	0	0	0	0	0	0	Rs					Rm4-1				-
 */})
 </script>
@@ -226,21 +226,21 @@ AND	Rm0	1	1	1	Rd					0	1	1	0	0	1	1	and
 <script>
 makeTable("t9902a", function() {/*
 32bitメモリアクセス	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	op
-LB	Rm0	0	0	0	Rd					0	0	0	0	0	1	1	lb
+Rd = [Rm + n12]C	Rm0	0	0	0	Rd					0	0	0	0	0	1	1	lb
 	n12												Rm4-1				-
-LH	Rm0	0	0	1	Rd					0	0	0	0	0	1	1	lh
+Rd = [Rm + n12]S	Rm0	0	0	1	Rd					0	0	0	0	0	1	1	lh
 	n12												Rm4-1				-
-LW	Rm0	0	1	0	Rd					0	0	0	0	0	1	1	lw
+Rd = [Rm + n12]L	Rm0	0	1	0	Rd					0	0	0	0	0	1	1	lw
 	n12												Rm4-1				-
-LBU	Rm0	1	0	0	Rd					0	0	0	0	0	1	1	lbu
+Rd = [Rm + n12]	Rm0	1	0	0	Rd					0	0	0	0	0	1	1	lbu
 	n12												Rm4-1				-
-LHU	Rm0	1	0	1	Rd					0	0	0	0	0	1	1	lhu
+Rd = [Rm + n12]W	Rm0	1	0	1	Rd					0	0	0	0	0	1	1	lhu
 	n12												Rm4-1				-
-SB	Rm0	0	0	0	n4-0					0	1	0	0	0	1	1	sb
+[Rm + n12] = Rs	Rm0	0	0	0	n4-0					0	1	0	0	0	1	1	sb
 	n11-5							Rs					Rm4-1				-
-SH	Rm0	0	0	1	n4-0					0	1	0	0	0	1	1	sh
+[Rm + n12]W = Rs	Rm0	0	0	1	n4-0					0	1	0	0	0	1	1	sh
 	n11-5							Rs					Rm4-1				-
-SW	Rm0	0	1	0	n4-0					0	1	0	0	0	1	1	sw
+[Rm + n12]L = Rs	Rm0	0	1	0	n4-0					0	1	0	0	0	1	1	sw
 	n11-5							Rs					Rm4-1				-
 */})
 </script>
@@ -249,21 +249,21 @@ SW	Rm0	0	1	0	n4-0					0	1	0	0	0	1	1	sw
 <script>
 makeTable("t9903a", function() {/*
 32bit分岐	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	op
-JAL	n15-12				Rd					1	1	0	1	1	1	1	jal
+JAL Rd, n20	n15-12				Rd					1	1	0	1	1	1	1	jal
 	n20	n10-1										n11	n19-16				-
-JALR	Rs0	0	0	0	Rd					1	1	0	0	1	1	1	jalr
+JALR Rd, Rs + n12	Rs0	0	0	0	Rd					1	1	0	0	1	1	1	jalr
 	n12												Rs4-1				-
-BEQ	Rm0	0	0	0	n4-1				n11	1	1	0	0	0	1	1	beq
+IF Rm = Rs GOTO n12	Rm0	0	0	0	n4-1				n11	1	1	0	0	0	1	1	beq
 	n12	n10-5						Rs					Rm4-1				-
-BNE	Rm0	0	0	1	n4-1				n11	1	1	0	0	0	1	1	bne
+IF Rm != Rs GOTO n12	Rm0	0	0	1	n4-1				n11	1	1	0	0	0	1	1	bne
 	n12	n10-5						Rs					Rm4-1				-
-BLT	Rm0	1	0	0	n4-1				n11	1	1	0	0	0	1	1	blt
+IF Rm &lt; Rs GOTO n12	Rm0	1	0	0	n4-1				n11	1	1	0	0	0	1	1	blt
 	n12	n10-5						Rs					Rm4-1				-
-BGE	Rm0	1	0	1	n4-1				n11	1	1	0	0	0	1	1	bge
+IF Rm &gt;= Rs GOTO n12	Rm0	1	0	1	n4-1				n11	1	1	0	0	0	1	1	bge
 	n12	n10-5						Rs					Rm4-1				-
-BLTU	Rm0	1	1	0	n4-1				n11	1	1	0	0	0	1	1	bltu
+IF LTU(Rm, Rs) GOTO n12	Rm0	1	1	0	n4-1				n11	1	1	0	0	0	1	1	bltu
 	n12	n10-5						Rs					Rm4-1				-
-BGEU	Rm0	1	1	1	n4-1				n11	1	1	0	0	0	1	1	bgeu
+IF GEU(Rm, Rs) GOTO n12	Rm0	1	1	1	n4-1				n11	1	1	0	0	0	1	1	bgeu
 	n12	n10-5						Rs					Rm4-1				-
 */})
 </script>
