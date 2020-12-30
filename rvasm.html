@@ -20,7 +20,7 @@ body {
 	margin-top: .5em;
 }
 .tarmasm th:first-child {
-	width: 9em;
+	width: 11em;
 	text-align: left;
 	border: none;
 }
@@ -85,9 +85,22 @@ Rd = Rm / Rs	Rm0	1	0	0	Rd					0	1	1	0	0	1	1	div
 	0	0	0	0	0	0	1	Rs					Rm4-1				-
 Rd = Rm % Rs	Rm0	1	1	0	Rd					0	1	1	0	0	1	1	rem
 	0	0	0	0	0	0	1	Rs					Rm4-1				-
+Rd = MULH(Rm, Rs)	Rm0	0	0	1	Rd					0	1	1	0	0	1	1	mulh
+	0	0	0	0	0	0	1	Rs					Rm4-1				-
+Rd = MULHSU(Rm, Rs)	Rm0	0	1	0	Rd					0	1	1	0	0	1	1	mulhsu
+	0	0	0	0	0	0	1	Rs					Rm4-1				-
+Rd = MULHU(Rm, Rs)	Rm0	0	1	1	Rd					0	1	1	0	0	1	1	mulhu
+	0	0	0	0	0	0	1	Rs					Rm4-1				-
+Rd = DIVU(Rm, Rs)	Rm0	1	0	1	Rd					0	1	1	0	0	1	1	divu
+	0	0	0	0	0	0	1	Rs					Rm4-1				-
+Rd = REMU(Rm, Rs)	Rm0	1	1	1	Rd					0	1	1	0	0	1	1	remu
+	0	0	0	0	0	0	1	Rs					Rm4-1				-
 */})
 </script>
-※mul/div/remにC命令なし、mulh,mulhsu,mulhu,divu,remuもある<br>
+※mul/div/remにC命令なし<br>
+※MULH:乗算結果の上位, MULHSU:符号付きRm×符号なしRsの上位, MULHU:符号なし乗算結果の上位<br>
+※DIVU:符号なし除算, REU:符号なし剰余
+<br>
 
 <!--
 	Armから無い
