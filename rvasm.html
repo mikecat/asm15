@@ -183,38 +183,30 @@ Rd = PC + n32	n15-12				Rd					0	0	1	0	1	1	1	auipc
 	n31-16																-
 Rd = Rm + n12	Rm0	0	0	0	Rd					0	0	1	0	0	1	1	addi
 	n12												Rm4-1				-
-Rd = Rm &lt; n12	Rm0	0	1	0	Rd					0	0	1	0	0	1	1	slti
-	n12												Rm4-1				-
-Rd = LTU(Rm, n12)	Rm0	0	1	1	Rd					0	0	1	0	0	1	1	sltiu
-	n12												Rm4-1				-
-Rd = Rm ^ n12	Rm0	1	0	0	Rd					0	0	1	0	0	1	1	xori
-	n12												Rm4-1				-
-Rd = Rm | n12	Rm0	1	1	0	Rd					0	0	1	0	0	1	1	ori
-	n12												Rm4-1				-
-Rd = Rm &amp; n12	Rm0	1	1	1	Rd					0	0	1	0	0	1	1	andi
-	n12												Rm4-1				-
+Rd = Rm + Rs	Rm0	0	0	0	Rd					0	1	1	0	0	1	1	add
+	0	0	0	0	0	0	0	Rs					Rm4-1				-
+Rd = Rm - Rs	Rm0	0	0	0	Rd					0	1	1	0	0	1	1	sub
+	0	1	0	0	0	0	0	Rs					Rm4-1				-
 Rd = Rm &lt;&lt; u5	Rm0	0	0	1	Rd					0	0	1	0	0	1	1	slli
 	0	0	0	0	0	0	0	u5					Rm4-1				-
 Rd = Rm &gt;&gt; u5	Rm0	1	0	1	Rd					0	0	1	0	0	1	1	srli
 	0	0	0	0	0	0	0	u5					Rm4-1				-
 Rd = Rm &gt;&gt;&gt; u5	Rm0	1	0	1	Rd					0	0	1	0	0	1	1	srai
 	0	1	0	0	0	0	0	u5					Rm4-1				-
-Rd = Rm + Rs	Rm0	0	0	0	Rd					0	1	1	0	0	1	1	add
-	0	0	0	0	0	0	0	Rs					Rm4-1				-
-Rd = Rm - Rs	Rm0	0	0	0	Rd					0	1	1	0	0	1	1	sub
-	0	1	0	0	0	0	0	Rs					Rm4-1				-
 Rd = Rm &lt;&lt; Rs	Rm0	0	0	1	Rd					0	1	1	0	0	1	1	sll
-	0	0	0	0	0	0	0	Rs					Rm4-1				-
-Rd = Rm &lt; Rs	Rm0	0	1	0	Rd					0	1	1	0	0	1	1	slt
-	0	0	0	0	0	0	0	Rs					Rm4-1				-
-Rd = LTU(Rm, Rs)	Rm0	0	1	1	Rd					0	1	1	0	0	1	1	sltu
-	0	0	0	0	0	0	0	Rs					Rm4-1				-
-Rd = Rm ^ Rs	Rm0	1	0	0	Rd					0	1	1	0	0	1	1	xor
 	0	0	0	0	0	0	0	Rs					Rm4-1				-
 Rd = Rm &gt;&gt; Rs	Rm0	1	0	1	Rd					0	1	1	0	0	1	1	srl
 	0	0	0	0	0	0	0	Rs					Rm4-1				-
 Rd = Rm &gt;&gt;&gt; Rs	Rm0	1	0	1	Rd					0	1	1	0	0	1	1	sra
 	0	1	0	0	0	0	0	Rs					Rm4-1				-
+Rd = Rm ^ n12	Rm0	1	0	0	Rd					0	0	1	0	0	1	1	xori
+	n12												Rm4-1				-
+Rd = Rm | n12	Rm0	1	1	0	Rd					0	0	1	0	0	1	1	ori
+	n12												Rm4-1				-
+Rd = Rm &amp; n12	Rm0	1	1	1	Rd					0	0	1	0	0	1	1	andi
+	n12												Rm4-1				-
+Rd = Rm ^ Rs	Rm0	1	0	0	Rd					0	1	1	0	0	1	1	xor
+	0	0	0	0	0	0	0	Rs					Rm4-1				-
 Rd = Rm | Rs	Rm0	1	1	0	Rd					0	1	1	0	0	1	1	or
 	0	0	0	0	0	0	0	Rs					Rm4-1				-
 Rd = Rm &amp; Rs	Rm0	1	1	1	Rd					0	1	1	0	0	1	1	and
@@ -226,15 +218,15 @@ Rd = Rm &amp; Rs	Rm0	1	1	1	Rd					0	1	1	0	0	1	1	and
 <script>
 makeTable("t9902a", function() {/*
 32bitメモリアクセス	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	op
+Rd = [Rm + n12]	Rm0	1	0	0	Rd					0	0	0	0	0	1	1	lbu
+	n12												Rm4-1				-
 Rd = [Rm + n12]C	Rm0	0	0	0	Rd					0	0	0	0	0	1	1	lb
+	n12												Rm4-1				-
+Rd = [Rm + n12]W	Rm0	1	0	1	Rd					0	0	0	0	0	1	1	lhu
 	n12												Rm4-1				-
 Rd = [Rm + n12]S	Rm0	0	0	1	Rd					0	0	0	0	0	1	1	lh
 	n12												Rm4-1				-
 Rd = [Rm + n12]L	Rm0	0	1	0	Rd					0	0	0	0	0	1	1	lw
-	n12												Rm4-1				-
-Rd = [Rm + n12]	Rm0	1	0	0	Rd					0	0	0	0	0	1	1	lbu
-	n12												Rm4-1				-
-Rd = [Rm + n12]W	Rm0	1	0	1	Rd					0	0	0	0	0	1	1	lhu
 	n12												Rm4-1				-
 [Rm + n12] = Rs	Rm0	0	0	0	n4-0					0	1	0	0	0	1	1	sb
 	n11-5							Rs					Rm4-1				-
@@ -248,6 +240,21 @@ Rd = [Rm + n12]W	Rm0	1	0	1	Rd					0	0	0	0	0	1	1	lhu
 <table id="t9903a" class=tarmasm></table>
 <script>
 makeTable("t9903a", function() {/*
+32bit比較	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	op
+Rd = Rm &lt; n12	Rm0	0	1	0	Rd					0	0	1	0	0	1	1	slti
+	n12												Rm4-1				-
+Rd = LTU(Rm, n12)	Rm0	0	1	1	Rd					0	0	1	0	0	1	1	sltiu
+	n12												Rm4-1				-
+Rd = Rm &lt; Rs	Rm0	0	1	0	Rd					0	1	1	0	0	1	1	slt
+	0	0	0	0	0	0	0	Rs					Rm4-1				-
+Rd = LTU(Rm, Rs)	Rm0	0	1	1	Rd					0	1	1	0	0	1	1	sltu
+	0	0	0	0	0	0	0	Rs					Rm4-1				-
+*/})
+</script>
+
+<table id="t9904a" class=tarmasm></table>
+<script>
+makeTable("t9904a", function() {/*
 32bit分岐	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	op
 JAL Rd, n20	n15-12				Rd					1	1	0	1	1	1	1	jal
 	n20	n10-1										n11	n19-16				-
@@ -268,9 +275,9 @@ IF GEU(Rm, Rs) GOTO n12	Rm0	1	1	1	n4-1				n11	1	1	0	0	0	1	1	bgeu
 */})
 </script>
 
-<table id="t9904a" class=tarmasm></table>
+<table id="t9905a" class=tarmasm></table>
 <script>
-makeTable("t9904a", function() {/*
+makeTable("t9905a", function() {/*
 32bitその他	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	op
 FENCE	0	0	0	0	0	0	0	0	0	0	0	0	1	1	1	1	fence
 	0	0	0	0	PI	PO	PR	PW	SI	SO	SR	SW	0	0	0	0	-
