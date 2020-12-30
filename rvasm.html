@@ -64,10 +64,10 @@ Rd = Rm	1	0	0	0	Rd					Rm					1	0	c.mv
 makeTable("t1188b", function() {/*
 演算	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	op
 Rd += n6	0	0	0	n5	Rd					n4-0					0	1	c.addi
-Rd &lt;&lt;= u6	0	0	0	u5	Rd					u4-0					1	0	c.slli
+Rd &lt;&lt;= u5	0	0	0	0	Rd					u4-0					1	0	c.slli
 Rd += Rm	1	0	0	1	Rd					Rm					1	0	c.add
-Rd' &gt;&gt;= u6	1	0	0	u5	0	0	Rd'			u4-0					0	1	c.srli
-Rd' &gt;&gt;&gt;= u6	1	0	0	u5	0	1	Rd'			u4-0					0	1	c.srai
+Rd' &gt;&gt;= u5	1	0	0	0	0	0	Rd'			u4-0					0	1	c.srli
+Rd' &gt;&gt;&gt;= u5	1	0	0	0	0	1	Rd'			u4-0					0	1	c.srai
 Rd' &amp;= n6	1	0	0	n5	1	0	Rd'			n4-0					0	1	c.andi
 Rd' -= Rm'	1	0	0	0	1	1	Rd'			0	0	Rm'			0	1	c.sub
 Rd' ^= Rm'	1	0	0	0	1	1	Rd'			0	1	Rm'			0	1	c.xor
