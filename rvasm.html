@@ -163,6 +163,95 @@ WFI	0	0	0	0	0	0	0	0	0	1	1	1	0	0	1	1	wfi
 </script>
 ※NOP:なにもしない(no operation) R0+=0<br>
 
+<table id="t9900a" class=tarmasm></table>
+<script>
+makeTable("t9900a", function() {/*
+32bit命令	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	op
+LUI	n15-12				Rd					0	1	1	0	1	1	1	lui
+	n31-16																-
+AUIPC	n15-12				Rd					0	0	1	0	1	1	1	auipc
+	n31-16																-
+JAL	n15-12				Rd					1	1	0	1	1	1	1	jal
+	n20	n10-1										n11	n19-16				-
+JALR	Rs0	0	0	0	Rd					1	1	0	0	1	1	1	jalr
+	n12												Rs4-1				-
+BEQ	Rm0	0	0	0	n4-1				n11	1	1	0	0	0	1	1	beq
+	n12	n10-5						Rs					Rm4-1				-
+BNE	Rm0	0	0	1	n4-1				n11	1	1	0	0	0	1	1	bne
+	n12	n10-5						Rs					Rm4-1				-
+BLT	Rm0	1	0	0	n4-1				n11	1	1	0	0	0	1	1	blt
+	n12	n10-5						Rs					Rm4-1				-
+BGE	Rm0	1	0	1	n4-1				n11	1	1	0	0	0	1	1	bge
+	n12	n10-5						Rs					Rm4-1				-
+BLTU	Rm0	1	1	0	n4-1				n11	1	1	0	0	0	1	1	bltu
+	n12	n10-5						Rs					Rm4-1				-
+BGEU	Rm0	1	1	1	n4-1				n11	1	1	0	0	0	1	1	bgeu
+	n12	n10-5						Rs					Rm4-1				-
+LB	Rm0	0	0	0	Rd					0	0	0	0	0	1	1	lb
+	n12												Rm4-1				-
+LH	Rm0	0	0	1	Rd					0	0	0	0	0	1	1	lh
+	n12												Rm4-1				-
+LW	Rm0	0	1	0	Rd					0	0	0	0	0	1	1	lw
+	n12												Rm4-1				-
+LBU	Rm0	1	0	0	Rd					0	0	0	0	0	1	1	lbu
+	n12												Rm4-1				-
+LHU	Rm0	1	0	1	Rd					0	0	0	0	0	1	1	lhu
+	n12												Rm4-1				-
+SB	Rm0	0	0	0	n4-0					0	1	0	0	0	1	1	sb
+	n11-5							Rs					Rm4-1				-
+SH	Rm0	0	0	1	n4-0					0	1	0	0	0	1	1	sh
+	n11-5							Rs					Rm4-1				-
+SW	Rm0	0	1	0	n4-0					0	1	0	0	0	1	1	sw
+	n11-5							Rs					Rm4-1				-
+ADDI	Rm0	0	0	0	Rd					0	0	1	0	0	1	1	addi
+	n12												Rm4-1				-
+SLTI	Rm0	0	1	0	Rd					0	0	1	0	0	1	1	slti
+	n12												Rm4-1				-
+SLTIU	Rm0	0	1	1	Rd					0	0	1	0	0	1	1	sltiu
+	n12												Rm4-1				-
+XORI	Rm0	1	0	0	Rd					0	0	1	0	0	1	1	xori
+	n12												Rm4-1				-
+ORI	Rm0	1	1	0	Rd					0	0	1	0	0	1	1	ori
+	n12												Rm4-1				-
+ANDI	Rm0	1	1	1	Rd					0	0	1	0	0	1	1	andi
+	n12												Rm4-1				-
+SLLI	Rm0	0	0	1	Rd					0	0	1	0	0	1	1	slli
+	0	0	0	0	0	0	0	u5					Rm4-1				-
+SRLI	Rm0	1	0	1	Rd					0	0	1	0	0	1	1	srli
+	0	0	0	0	0	0	0	u5					Rm4-1				-
+SRAI	Rm0	1	0	1	Rd					0	0	1	0	0	1	1	srai
+	0	1	0	0	0	0	0	u5					Rm4-1				-
+ADD	Rm0	0	0	0	Rd					0	1	1	0	0	1	1	add
+	0	0	0	0	0	0	0	Rs					Rm4-1				-
+SUB	Rm0	0	0	0	Rd					0	1	1	0	0	1	1	sub
+	0	1	0	0	0	0	0	Rs					Rm4-1				-
+SLL	Rm0	0	0	1	Rd					0	1	1	0	0	1	1	sll
+	0	0	0	0	0	0	0	Rs					Rm4-1				-
+SLT	Rm0	0	1	0	Rd					0	1	1	0	0	1	1	slt
+	0	0	0	0	0	0	0	Rs					Rm4-1				-
+SLTU	Rm0	0	1	1	Rd					0	1	1	0	0	1	1	sltu
+	0	0	0	0	0	0	0	Rs					Rm4-1				-
+XOR	Rm0	1	0	0	Rd					0	1	1	0	0	1	1	xor
+	0	0	0	0	0	0	0	Rs					Rm4-1				-
+SRL	Rm0	1	0	1	Rd					0	1	1	0	0	1	1	srl
+	0	0	0	0	0	0	0	Rs					Rm4-1				-
+SRA	Rm0	1	0	1	Rd					0	1	1	0	0	1	1	sra
+	0	1	0	0	0	0	0	Rs					Rm4-1				-
+OR	Rm0	1	1	0	Rd					0	1	1	0	0	1	1	or
+	0	0	0	0	0	0	0	Rs					Rm4-1				-
+AND	Rm0	1	1	1	Rd					0	1	1	0	0	1	1	and
+	0	0	0	0	0	0	0	Rs					Rm4-1				-
+FENCE	0	0	0	0	0	0	0	0	0	0	0	0	1	1	1	1	fence
+	0	0	0	0	PI	PO	PR	PW	SI	SO	SR	SW	0	0	0	0	-
+FENCE.TSO	0	0	0	0	0	0	0	0	0	0	0	0	1	1	1	1	fence.tso
+	1	0	0	0	0	0	1	1	0	0	1	1	0	0	0	0	-
+ECALL	0	0	0	0	0	0	0	0	0	1	1	1	0	0	1	1	ecall
+	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	-
+EBREAK	0	0	0	0	0	0	0	0	0	1	1	1	0	0	1	1	ebreak
+	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	-
+*/})
+</script>
+
 </p><p>
 <a href=https://fukuno.jig.jp/2720>比べてみよう、RISC-VとArm、RISC-V対応かんたんマシン語「asm15r」</a><br>
 <a href=armasm.html>Cortex-M0 Armマシン語表(asm15)</a><br>
