@@ -121,7 +121,7 @@ GOSUB Rs	1	0	0	1	Rs					0	0	0	0	0	1	0	c.jalr
 RET (=GOTO R1)	1	0	0	0	0	0	0	0	1	0	0	0	0	0	1	0	c.ret?
 */})
 </script>
-※n12:飛び先とのハーフワード(2byte)数の差分<br>
+※n9/n12:飛び先とのハーフワード(2byte)数の差分<br>
 
 <table id="t1479b" class=tarmasm></table>
 <script>
@@ -134,8 +134,8 @@ SP += n10	0	1	1	n9	0	0	0	1	0	n4	n6	n8-7		n5	0	1	c.addi16sp
 */})
 </script>
 ※PUSH: [SP + u8]L = Rs, POP: Rd = [SP + u8]L (スタックポインタは変化しない)<br>
-※n8,u10:4byte単位のオフセット<br>
-※n10:16byte単位<br>
+※u8/u10:4byte単位のオフセット<br>
+※SP+=n10: n10は16byte単位<br>
 ※SP = R2<br>
 
 <table id="t1479e" class=tarmasm></table>
