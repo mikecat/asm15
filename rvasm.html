@@ -37,6 +37,9 @@ body {
 	padding-left: 3px;
 	border: 1px solid black;
 }
+.tarmasm tr.upper {
+	background-color: #ddd;
+}
 a {
 	color: gray !important;
 }
@@ -252,6 +255,16 @@ EBREAK	0	0	0	0	0	0	0	0	0	1	1	1	0	0	1	1	ebreak
 */})
 </script>
 
+
+<script>
+(function(){
+	var trs = document.getElementsByTagName("tr");
+	for (var i = 0; i < trs.length; i++) {
+		var fc = trs[i].firstChild;
+		if (fc != null && fc.firstChild == null) trs[i].setAttribute("class", "upper");
+	}
+})();
+</script>
 </p><p>
 <a href=https://fukuno.jig.jp/2720>比べてみよう、RISC-VとArm、RISC-V対応かんたんマシン語「asm15r」</a><br>
 <a href=armasm.html>Cortex-M0 Armマシン語表(asm15)</a><br>
