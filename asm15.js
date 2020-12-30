@@ -229,15 +229,18 @@ function cond(ofs, invert) {
 	};
 	return f;
 }
-function n6n18(d, pc) {
-	d = pint(d);
-	if ((d & 0xffffffe0) == 0 || ((d >> 5) & 0x07ffffff) == 0x07ffffff) {
-		return ((d & 0x1f) << 2) | (((d >> 5) & 0x1) << 12);
-	} else if (((d & 0xfffe0000) == 0 || ((d >> 17) & 0x00007fff) == 0x00007fff) && (d & 0xfff) == 0) {
-		return (((d >> 12) & 0x1f) << 2) | (((d >> 17) & 0x1) << 12) | (0x1 << 14);
-	} else {
-		throw new Error("invalid value");
-	}
+function n6n18() {
+	var f = function(d, pc) {
+		d = pint(d);
+		if ((d & 0xffffffe0) == 0 || ((d >> 5) & 0x07ffffff) == 0x07ffffff) {
+			return ((d & 0x1f) << 2) | (((d >> 5) & 0x1) << 12);
+		} else if (((d & 0xfffe0000) == 0 || ((d >> 17) & 0x00007fff) == 0x00007fff) && (d & 0xfff) == 0) {
+			return (((d >> 12) & 0x1f) << 2) | (((d >> 17) & 0x1) << 12) | (0x1 << 14);
+		} else {
+			throw new Error("invalid value");
+		}
+	};
+	return f;
 }
 function d(func, plist) {
 	// plist: array of [src_shift,dst_shift,bits]
@@ -466,7 +469,7 @@ var cmdlist_rv32c = [
 ["wfi",[0x10500073]],
 
 ["reg32 = reg32",0x8002,b(5,7),b(5,2)],
-["reg32 = n", 0x2001,b(5,7),n6n18],
+["reg32 = n", 0x2001,b(5,7),n6n18()],
 
 ];
 
