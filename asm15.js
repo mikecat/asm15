@@ -759,6 +759,34 @@ function assemble() {
 				}
 				prgctr = new_prgctr;
 				continue;
+			} else if (line.slice(0,5) == "align") {
+				var parts = cutComment(line.substr(5)).split(/,/);
+				var a = pint(parts[0]);
+				var b = parts.length >= 2 ? pint(parts[1]) : 0;
+				var c = parts.length >= 3 ? pint(parts[2]) : null;
+				var new_prgctr = prgctr, r = prgctr % a;
+				if (a <= 0 || b < 0) {
+					throw new Error("invalid parameter");
+				}
+				if (r < b) {
+					new_prgctr += b - r;
+				} else if (r > b) {
+					new_prgctr += b + a - r;
+				}
+				if (new_prgctr & 1) {
+					throw new Error("odd PC not allowed");
+				}
+				if (c == null || prgctr + 2 > new_prgctr) {
+					outlist.push([i,prgctr,DIRECTIVE]);
+					prgctr = new_prgctr;
+				} else {
+					while (prgctr + 2 <= new_prgctr) {
+						outlist.push([i,prgctr,c]);
+						prgctr += 2;
+					}
+					prgctr = new_prgctr;
+				}
+				continue;
 			} else if (line == "") {
 				outlist.push([i,prgctr,EMPTYLINE]);
 				continue;
