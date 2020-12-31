@@ -758,6 +758,7 @@ function assemble() {
 				var b = parts.length >= 2 ? pint(parts[1]) : 0;
 				var c = parts.length >= 3 ? pint(parts[2]) : null;
 				var new_prgctr = prgctr, r = prgctr % a;
+				if (r < 0) r += a;
 				if (a <= 0 || b < 0) {
 					throw new Error("invalid parameter");
 				}
