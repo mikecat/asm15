@@ -734,7 +734,7 @@ function assemble() {
 				continue;
 			} else if (line.slice(0,4) == "mode") {
 				outlist.push([i,prgctr,DIRECTIVE]);
-				var mode = line.substr(4);
+				var mode = cutComment(line.substr(4));
 				if (mode in lists) {
 					curlist = lists[mode];
 					cmdlist = curlist.cmdlist;
