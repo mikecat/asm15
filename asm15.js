@@ -5,6 +5,7 @@ var COMMENT   = 0x100000000 + 2;
 var EMPTYLINE = 0x100000000 + 3;
 var ASMERR    = 0x100000000 + 4;
 var LABEL     = 0x100000000 + 5;
+var DIRECTIVE = 0x100000000 + 6;
 
 var lbl_dict = {};
 // var lbl_align4 = [];
@@ -672,13 +673,13 @@ function assemble() {
 	//lbl_align4 = [];
 	outlist = [];
 	var prgctr = 0;
-	if (document.getElementById("rv32c_check").checked) {
-		cmdlist = cmdlist_rv32c;
-		patlist = patlist_rv32c;
-	} else {
-		cmdlist = cmdlist_m0;
-		patlist = patlist_m0;
-	}
+	var lists = {
+		"m0": {"cmdlist": cmdlist_m0, "patlist": patlist_m0},
+		"rv32c": {"cmdlist": cmdlist_rv32c, "patlist": patlist_rv32c}
+	};
+	var curlist = lists["m0"];
+	cmdlist = curlist.cmdlist;
+	patlist = curlist.patlist;
 	dom_src=document.getElementById("textarea1");
 	dom_fmt=document.getElementById("selfmt");
 	dom_hex=document.getElementById("textarea2");
@@ -701,7 +702,9 @@ function assemble() {
 		orglines.push(lines[i]);
 	}
 	
+	var pats = [];
 	for (var i = 0; i < lines.length; i++) {
+		pats.push(curlist);
 		line = lines[i].toLowerCase().replace(/\s/g,"");
 		lines[i] = line;
 
@@ -727,6 +730,17 @@ function assemble() {
 				for (j = 0; j < dlist.length; j++){
 					outlist.push([i, prgctr, dlist[j]]);
 					prgctr += 2;
+				}
+				continue;
+			} else if (line.slice(0,4) == "mode") {
+				outlist.push([i,prgctr,DIRECTIVE]);
+				var mode = line.substr(4);
+				if (mode in lists) {
+					curlist = lists[mode];
+					cmdlist = curlist.cmdlist;
+					patlist = curlist.patlist;
+				} else {
+					throw new Error("unknown mode " + mode);
 				}
 				continue;
 			} else if (line == "") {
@@ -765,6 +779,8 @@ function assemble() {
 		if (p >= NOTOPCODE) {
 		}
 		if (p == YET) {
+			cmdlist = pats[lno].cmdlist;
+			patlist = pats[lno].patlist;
 			p = asmln(line,prgctr);
 			if (p != undefined && p.length + 1) {
 				// multiple-word instruction
