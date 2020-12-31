@@ -46,12 +46,16 @@ function readMachineCode(codeStr) {
 		}
 
 		if (!basValid) {
-			var binCode = s[i].replace(/[^01]/g, "");
-			if (binCode.length == 16) {
-				var binValue = parseInt(binCode, 2);
-				memWrites.push([n * 2, binValue & 0xff, "bin"]);
-				memWrites.push([n * 2 + 1, (binValue >> 8) & 0xff, "bin"]);
-				n++;
+			if ((matched = /^\*\*\* (-?[0-9]+)-byte gap \*\*\*$/.exec(s[i]))) {
+				n += parseInt(matched[1]) >> 1;
+			} else {
+				var binCode = s[i].replace(/[^01]/g, "");
+				if (binCode.length == 16) {
+					var binValue = parseInt(binCode, 2);
+					memWrites.push([n * 2, binValue & 0xff, "bin"]);
+					memWrites.push([n * 2 + 1, (binValue >> 8) & 0xff, "bin"]);
+					n++;
+				}
 			}
 		}
 	}

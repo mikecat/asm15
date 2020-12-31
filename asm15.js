@@ -743,6 +743,22 @@ function assemble() {
 					throw new Error("unknown mode " + mode);
 				}
 				continue;
+			} else if (line.slice(0,4) == "orgr") {
+				outlist.push([i,prgctr,DIRECTIVE]);
+				var new_prgctr = startadr + pint(cutComment(line.substr(4)));
+				if (new_prgctr & 1) {
+					throw new Error("odd PC not allowed");
+				}
+				prgctr = new_prgctr;
+				continue;
+			} else if (line.slice(0,3) == "org") {
+				outlist.push([i,prgctr,DIRECTIVE]);
+				var new_prgctr = pint(cutComment(line.substr(3)));
+				if (new_prgctr & 1) {
+					throw new Error("odd PC not allowed");
+				}
+				prgctr = new_prgctr;
+				continue;
 			} else if (line == "") {
 				outlist.push([i,prgctr,EMPTYLINE]);
 				continue;

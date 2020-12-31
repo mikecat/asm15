@@ -29,11 +29,12 @@ function m2b16(lines,outlist){
 		p=out[2];
 		line=lines[l];
 
+		var flush = false;
 		if(p==EMPTYLINE){
 			continue;
 		}else if(p===undefined||p===null||p===false||p>=NOTOPCODE){
 			continue
-		}else{
+		}else if(lineadr<0 || lineadr+linehex.length==a){
 			if(lineadr<0){
 				lineadr=a;
 			}
@@ -43,8 +44,11 @@ function m2b16(lines,outlist){
 			p1=zero16(p1);
 			linehex.push("#"+p0);
 			linehex.push("#"+p1);
+		}else{
+			flush = true;
+			i--;
 		}
-		if(linehex.length>=8){
+		if(linehex.length>=8 || flush){
 			lines2.push(""+nln.toString(10)+" POKE#"+lineadr.toString(16)+
 			","+linehex.join(","));
 			linehex=[];
@@ -81,16 +85,22 @@ function m2b10(lines,outlist){
 		} else if(p===undefined||p===null||p===false||p>=NOTOPCODE){
 		 	continue
 		} else {
-			if (lineadr < 0) {
-				lineadr = a;
+			var flush = false;
+			if(lineadr < 0 || lineadr+linehex.length==a){
+				if (lineadr < 0) {
+					lineadr = a;
+				}
+				p0 = p & 0x0ff;
+				p1 = (p >> 8) & 0x0ff
+				linehex.push(p0.toString(10));
+				linehex.push(p1.toString(10));
+			} else {
+				flush = true;
+				i--;
 			}
-			p0 = p & 0x0ff;
-			p1 = (p >> 8) & 0x0ff
-			linehex.push(p0.toString(10));
-			linehex.push(p1.toString(10));
 			
 			var ln = nln.toString(10) + " POKE#" + lineadr.toString(16).toUpperCase() + "," + linehex.join(",");
-			if (ln.length > 200 - 8) {
+			if (ln.length > 200 - 8 || flush) {
 //			if (linehex.length == 40) {
 				lines2.push(ln);
 				lineadr = -1;
@@ -137,6 +147,7 @@ function m2bin(lines,outlist){
 	var p,p0,p1;
 	var bas="",i,line,out,nln;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
+	var paddr=-1;
 	for(i=0; i<outlist.length; i++){
 		out=outlist[i];
 		l=out[0];
@@ -148,11 +159,18 @@ function m2bin(lines,outlist){
 			continue;
 		}else if(p===undefined||p===null||p===false||p>=NOTOPCODE){
 		}else{
+			if(paddr<0){
+				paddr=a;
+			} else if(paddr!=a){
+				bas+="*** "+(a-paddr)+"-byte gap ***\n";
+				paddr=a;
+			}
 			p0=p&0x0ff;
 			p1=(p>>8)&0x0ff
 			p0=zero2(p0);
 			p1=zero2(p1);
 			bas+=""+p1+p0+"\n";
+			paddr+=2;
 		}
 	}
 	return bas;
@@ -162,6 +180,10 @@ function m2ar2(lines,outlist){
 	var bas="",i,line,out,nln;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var n = 0;
+	var minaddr = 0;
+	for (var i = 0; i < outlist.length; i++) {
+		if (i == 0 || outlist[i][1] < minaddr) minaddr = outlist[i][1];
+	}
 	for (var i = 0; i < outlist.length; i++) {
 		out=outlist[i];
 		l=out[0];
@@ -173,9 +195,9 @@ function m2ar2(lines,outlist){
 			continue;
 		} else if(p===undefined||p===null||p===false||p>=NOTOPCODE){
 		} else {
+			n = (a - minaddr) >> 1;
 //			bas += "[" + n + "]=`" + zero2w(p) + "\n";// + " '" + line + "\n";
 			bas += "[" + n + "]=`" + zero2(p >> 8) + " " + zero2(p & 0xff) + " :'" + line + "\n";
-			n++;
 		}
 	}
 	return bas;
@@ -186,6 +208,11 @@ function m2ar16(lines,outlist) {
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var n = 0;
 	var linehex=[];
+	var lineaddr = -1;
+	var minaddr = 0;
+	for (var i = 0; i < outlist.length; i++) {
+		if (i == 0 || outlist[i][1] < minaddr) minaddr = outlist[i][1];
+	}
 	
 	var limit = 30;
 	var nln = 10;
@@ -200,18 +227,27 @@ function m2ar16(lines,outlist) {
 			continue;
 		} else if(p===undefined||p===null||p===false||p>=NOTOPCODE){
 		} else {
-			var hex = "000" + p.toString(16).toUpperCase();
-			linehex.push("#" + hex.substring(hex.length - 4));
+			var flush = false;
+			if (lineaddr<0 || lineaddr+linehex.length*2==a){
+				if (lineaddr<0) lineaddr=a;
+				var hex = "000" + p.toString(16).toUpperCase();
+				linehex.push("#" + hex.substring(hex.length - 4));
+			} else {
+				flush=true;
+				i--;
+			}
 			
-			if (linehex.length == limit) {
+			if (linehex.length == limit || flush) {
+				n = (lineaddr - minaddr) >> 1;
 				bas += nln + " LET[" + n + "]," + linehex.join(",") + "\n";
-				n += linehex.length;
 				nln += 10;
 				linehex = [];
+				lineaddr=-1;
 			}
 		}
 	}
 	if (linehex.length > 0) {
+		n = (lineaddr - minaddr) >> 1;
 		bas += nln + " LET[" + n + "]," + linehex.join(",") + "\n";
 	}
 	return bas;
@@ -222,6 +258,11 @@ function m2js(lines,outlist){
 	var bas="",i,line,out;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var lines2=[],linehex=[],lineadr=-1;
+	var minaddr = 0;
+	for (var i = 0; i < outlist.length; i++) {
+		if (i == 0 || outlist[i][1] < minaddr) minaddr = outlist[i][1];
+	}
+	var supaddr = minaddr;
 	
 	for(i=0; i<outlist.length; i++){
 		out=outlist[i];
@@ -230,11 +271,12 @@ function m2js(lines,outlist){
 		p=out[2];
 		line=lines[l];
 
+		var flush=false;
 		if(p==EMPTYLINE){
 			continue;
 		}else if(p===undefined||p===null||p===false||p>=NOTOPCODE){
 			continue
-		}else{
+		}else if(lineadr<0 || lineadr+linehex.length==a){
 			if(lineadr<0){
 				lineadr=a;
 			}
@@ -242,18 +284,28 @@ function m2js(lines,outlist){
 			p1=(p>>8)&0x0ff
 			linehex.push(p0);
 			linehex.push(p1);
+		}else {
+			flush=true;
+			i--;
 		}
-		if(linehex.length>=16){
+		if(linehex.length>=16 || flush){
+			if (supaddr != lineadr) {
+				lines2.push("\ta=a+"+(lineadr-supaddr));
+			}
 			lines2.push("\tmem(a,"
 				+ linehex.join(",")
 				+ ");a=a+"
 				+ linehex.length
 			);
+			supaddr=lineadr+linehex.length;
 			linehex=[];
 			lineadr=-1;
 		}
 	}
 	if (linehex.length>0) {
+		if (supaddr != lineadr) {
+			lines2.push("\ta=a+"+(lineadr-supaddr));
+		}
 		lines2.push("\tmem(a,"
 			+ linehex.join(",")
 //			+ ");a=a+"+ linehex.length
@@ -276,6 +328,11 @@ function m2c(lines,outlist){
 	var bas="",i,line,out;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var lines2=[],linehex=[],lineadr=-1;
+	var minaddr = 0;
+	for (var i = 0; i < outlist.length; i++) {
+		if (i == 0 || outlist[i][1] < minaddr) minaddr = outlist[i][1];
+	}
+	var supaddr = minaddr;
 
 	for (i=0; i<outlist.length; i++){
 		out=outlist[i];
@@ -284,11 +341,12 @@ function m2c(lines,outlist){
 		p=out[2];
 		line=lines[l];
 
+		var flush=false;
 		if(p==EMPTYLINE){
 			continue;
 		}else if(p===undefined||p===null||p===false||p>=NOTOPCODE){
 			continue
-		}else{
+		}else if(lineadr<0 || lineadr+linehex.length==a){
 			if(lineadr<0){
 				lineadr=a;
 			}
@@ -296,15 +354,23 @@ function m2c(lines,outlist){
 			p1=(p>>8)&0x0ff
 			linehex.push("0x" + zero16(p0));
 			linehex.push("0x" + zero16(p1));
+		}else {
+			flush=true;
+			i--;
 		}
-		if(linehex.length>=16){
-			lines2.push("\t" + linehex.join(", ") + ",");
+		if(linehex.length>=16 || flush){
+			var setaddr = "";
+			if (lineadr != supaddr) setaddr = "[" + (lineadr - minaddr) + "] = ";
+			lines2.push("\t" + setaddr + linehex.join(", ") + ",");
+			supaddr = lineadr+linehex.length;
 			linehex=[];
 			lineadr=-1;
 		}
 	}
 	if (linehex.length>0){
-		lines2.push("\t" + linehex.join(", "));
+		var setaddr = "";
+		if (lineadr != supaddr) setaddr = "[" + (lineadr - minaddr) + "] = ";
+		lines2.push("\t" + setaddr + linehex.join(", "));
 	}
 	lines2.push("");
 
@@ -329,11 +395,12 @@ function m2hex(lines,outlist){
 		p=out[2];
 		line=lines[l];
 
+		var flush=false;
 		if(p==EMPTYLINE){
 			continue;
 		}else if(p===undefined||p===null||p===false||p>=NOTOPCODE){
 			continue
-		}else{
+		}else if(lineadr<0 || lineadr+linehex.length==a){
 			if(lineadr<0){
 				lineadr=a;
 			}
@@ -342,12 +409,15 @@ function m2hex(lines,outlist){
 			linehex.push(zero16(p0));
 			linehex.push(zero16(p1));
 			chk -= p0 + p1;
+		}else {
+			flush=true;
+			i--;
 		}
-		if (linehex.length>=16){
+		if (linehex.length>=16 || flush){
 			var ad1 = lineadr >> 8;
 			var ad2 = lineadr & 0xff;
 			chk -= linehex.length + ad1 + ad2;
-			lines2.push(":" + zero16(0x10) + zero16(ad1) + zero16(ad2) + "00" + linehex.join("") + zero16(chk & 0xff));
+			lines2.push(":" + zero16(linehex.length) + zero16(ad1) + zero16(ad2) + "00" + linehex.join("") + zero16(chk & 0xff));
 			chk = 0;
 			linehex=[];
 			lineadr=-1;
@@ -381,11 +451,12 @@ function m2mot(lines, outlist) {
 		p=out[2];
 		line=lines[l];
 
+		var flush=false;
 		if (p==EMPTYLINE) {
 			continue;
 		} else if (p===undefined||p===null||p===false||p>=NOTOPCODE) {
 			continue
-		} else {
+		} else if(lineadr < 0 || lineadr+linehex.length==a){
 			if (lineadr < 0) {
 				if (startadr < 0)
 					startadr = a;
@@ -396,8 +467,11 @@ function m2mot(lines, outlist) {
 			linehex.push(zero16(p0));
 			linehex.push(zero16(p1));
 			chk += p0 + p1;
+		} else {
+			flush=true;
+			i--;
 		}
-		if (linehex.length >= 16) {
+		if (linehex.length >= 16 || flush) {
 			var ad1 = (lineadr >> 24) & 0xff;
 			var ad2 = (lineadr >> 16) & 0xff;
 			var ad3 = (lineadr >> 8) & 0xff;
