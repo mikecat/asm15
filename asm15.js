@@ -726,6 +726,9 @@ function assemble() {
 				outlist.push([i,prgctr,COMMENT]);
 				continue;
 			} else if (line.slice(0,4) == "data") {
+				if (prgctr % 2 == 1) {
+					prgctr++;
+				}
 				dlist = pdat(line, prgctr);
 				for (j = 0; j < dlist.length; j++){
 					outlist.push([i, prgctr, dlist[j]]);
