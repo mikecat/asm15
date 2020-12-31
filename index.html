@@ -70,6 +70,21 @@ window.onload = function() {
 <textarea id="textarea2" style="width:80%;height:15em;word-break: break-all;"></textarea>
 </div>
 
+<h3>疑似命令</h3>
+<div>
+<dl>
+<dt>@文字列</dt>
+<dd>ラベルを設定する。ラベルはGOTOの飛び先などに使用可能である。</dd>
+<dt>'文字列 / REM 文字列</dt>
+<dd>コメントを入れる。コメントは他の命令がある行につけることもできるが、DATA系の行にはつけられない。</dd>
+<dt>DATA[B|W|L] データ(列)</dt>
+<dd>4バイト単位にアライメントした後、指定したデータ(整数)を出力する。データ列はコンマで区切る。
+DATA/DATABは1バイトずつ、DATAWは2バイトずつ、DATALは4バイトずつである。</dd>
+<dt>MODE (M0|RV32C)</dt>
+<dd>命令セットを切り替える。デフォルトはM0である。</dd>
+</dl>
+</div>
+
 <h3>IchigoJam Armマシン語解説ページ</h3>
 <div>
 <ul>
