@@ -749,17 +749,11 @@ function assemble() {
 			} else if (line.slice(0,4) == "orgr") {
 				outlist.push([i,prgctr,DIRECTIVE]);
 				var new_prgctr = startadr + pint(cutComment(line.substr(4)));
-				if (new_prgctr & 1) {
-					throw new Error("odd PC not allowed");
-				}
 				prgctr = new_prgctr;
 				continue;
 			} else if (line.slice(0,3) == "org") {
 				outlist.push([i,prgctr,DIRECTIVE]);
 				var new_prgctr = pint(cutComment(line.substr(3)));
-				if (new_prgctr & 1) {
-					throw new Error("odd PC not allowed");
-				}
 				prgctr = new_prgctr;
 				continue;
 			} else if (line.slice(0,5) == "align") {
@@ -775,9 +769,6 @@ function assemble() {
 					new_prgctr += b - r;
 				} else if (r > b) {
 					new_prgctr += b + a - r;
-				}
-				if (new_prgctr & 1) {
-					throw new Error("odd PC not allowed");
 				}
 				if (c == null || prgctr + 2 > new_prgctr) {
 					outlist.push([i,prgctr,DIRECTIVE]);

@@ -162,6 +162,9 @@ function m2bin(lines,outlist){
 			if(paddr<0){
 				paddr=a;
 			} else if(paddr!=a){
+				if ((a-paddr)%2!=0) {
+					return "misalignment not supported in this format";
+				}
 				bas+="*** "+(a-paddr)+"-byte gap ***\n";
 				paddr=a;
 			}
@@ -195,6 +198,9 @@ function m2ar2(lines,outlist){
 			continue;
 		} else if(p===undefined||p===null||p===false||p>=NOTOPCODE){
 		} else {
+			if ((a - minaddr) % 2 != 0) {
+				return "misalignment not supported in this format";
+			}
 			n = (a - minaddr) >> 1;
 //			bas += "[" + n + "]=`" + zero2w(p) + "\n";// + " '" + line + "\n";
 			bas += "[" + n + "]=`" + zero2(p >> 8) + " " + zero2(p & 0xff) + " :'" + line + "\n";
@@ -238,6 +244,9 @@ function m2ar16(lines,outlist) {
 			}
 			
 			if (linehex.length == limit || flush) {
+				if ((lineaddr - minaddr) % 2 != 0) {
+					return "misalignment not supported in this format";
+				}
 				n = (lineaddr - minaddr) >> 1;
 				bas += nln + " LET[" + n + "]," + linehex.join(",") + "\n";
 				nln += 10;
@@ -247,6 +256,9 @@ function m2ar16(lines,outlist) {
 		}
 	}
 	if (linehex.length > 0) {
+		if ((lineaddr - minaddr) % 2 != 0) {
+			return "misalignment not supported in this format";
+		}
 		n = (lineaddr - minaddr) >> 1;
 		bas += nln + " LET[" + n + "]," + linehex.join(",") + "\n";
 	}
