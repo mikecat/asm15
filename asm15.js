@@ -753,11 +753,12 @@ function assemble() {
 				prgctr = new_prgctr;
 				continue;
 			} else if (line.slice(0,5) == "align") {
-				var parts = cutComment(line.substr(5)).split(/,/);
+				var is_r = line.substr(5,1) == "r";
+				var parts = cutComment(line.substr(is_r ? 6 : 5)).split(/,/);
 				var a = pint(parts[0]);
 				var b = parts.length >= 2 ? pint(parts[1]) : 0;
 				var c = parts.length >= 3 ? pint(parts[2]) : null;
-				var new_prgctr = prgctr, r = prgctr % a;
+				var new_prgctr = prgctr, r = (is_r ? prgctr - startadr : prgctr) % a;
 				if (r < 0) r += a;
 				if (a <= 0 || b < 0) {
 					throw new Error("invalid parameter");
