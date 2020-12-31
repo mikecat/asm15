@@ -705,34 +705,34 @@ function assemble() {
 		line = lines[i].toLowerCase().replace(/\s/g,"");
 		lines[i] = line;
 
-		if (line.charAt(0) == "@") {
-			/*
-			console.log("@put ", line, prgctr, lbl_align4);
-			if (lbl_align4.indexOf(line) >= 0) {
-					if (prgctr % 4 == 2) {
-					outlist.push([i, prgctr, 0]);
+		try {
+			if (line.charAt(0) == "@") {
+				/*
+				console.log("@put ", line, prgctr, lbl_align4);
+				if (lbl_align4.indexOf(line) >= 0) {
+						if (prgctr % 4 == 2) {
+						outlist.push([i, prgctr, 0]);
+						prgctr += 2;
+					}
+				}
+				*/
+				lbl_dict[cutComment(line)] = prgctr;
+				outlist.push([i,prgctr,LABEL]);
+				continue;
+			} else if (line.charAt(0) == "'" || line.slice(0,3) == "rem"){
+				outlist.push([i,prgctr,COMMENT]);
+				continue;
+			} else if (line.slice(0,4) == "data") {
+				dlist = pdat(line, prgctr);
+				for (j = 0; j < dlist.length; j++){
+					outlist.push([i, prgctr, dlist[j]]);
 					prgctr += 2;
 				}
-			}
-			*/
-			lbl_dict[cutComment(line)] = prgctr;
-			outlist.push([i,prgctr,LABEL]);
-			continue;
-		} else if (line.charAt(0) == "'" || line.slice(0,3) == "rem"){
-			outlist.push([i,prgctr,COMMENT]);
-			continue;
-		} else if (line.slice(0,4) == "data") {
-			dlist = pdat(line, prgctr);
-			for (j = 0; j < dlist.length; j++){
-				outlist.push([i, prgctr, dlist[j]]);
-				prgctr += 2;
-			}
-			continue;
-		} else if (line == "") {
-			outlist.push([i,prgctr,EMPTYLINE]);
-			continue;
-		} else {
-			try {
+				continue;
+			} else if (line == "") {
+				outlist.push([i,prgctr,EMPTYLINE]);
+				continue;
+			} else {
 				p = asmln(line, prgctr);
 				
 				if (p != undefined) {
@@ -749,9 +749,9 @@ function assemble() {
 				} else {
 					throw line; // alert("asm error: " + line);
 				}
-			} catch (e) {
-				alert("asm error in " + (i + 1) + "\n" + orglines[i] + "\n" + e);
 			}
+		} catch (e) {
+			alert("asm error in " + (i + 1) + "\n" + orglines[i] + "\n" + e);
 		}
 	}
 	
