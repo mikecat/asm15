@@ -781,6 +781,22 @@ function assemble() {
 					prgctr = new_prgctr;
 				}
 				continue;
+			} else if (line.slice(0,5) == "space") {
+				var parts = cutComment(line.substr(5)).split(/,/);
+				var a = pint(parts[0]);
+				var b = parts.length >= 2 ? pint(parts[1]) : null;
+				var new_prgctr = prgctr + a;
+				if (b == null || prgctr + 2 > new_prgctr) {
+					outlist.push([i,prgctr,DIRECTIVE]);
+					prgctr = new_prgctr;
+				} else {
+					while (prgctr + 2 <= new_prgctr) {
+						outlist.push([i,prgctr,b]);
+						prgctr += 2;
+					}
+					prgctr = new_prgctr;
+				}
+				continue;
 			} else if (line == "") {
 				outlist.push([i,prgctr,EMPTYLINE]);
 				continue;
