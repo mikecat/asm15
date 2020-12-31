@@ -471,6 +471,8 @@ var cmdlist_rv32c = [
 ["reg32 = reg32",0x8002,b(5,7),b(5,2)],
 ["reg32 = n", 0x2001,b(5,7),n6n18()],
 
+["reg32 = n",[0x00000037],b(5,7),d(b(32,0),[[0,-1,12],[12,12,20]])],
+
 ];
 
 var patlist_m0 = [];
@@ -517,17 +519,29 @@ function cutComment(s) {
 };
 
 function asmln(ln, prgctr) {
+	// 命令 > 命令でない値 > 例外 の順で優先
+	// それぞれ最初に出てきたものを採用
+	var exc = null, result = undefined;
 	ln = cutComment(ln);
 	//ln=ln.toLowerCase().replace(/\s/g,"");
 	for (var j = 0; j < patlist.length; j++) {
 		var m = ln.match(patlist[j]);
 		if (m) {
 			// console.log(patlist[j] + " " + m);
-			var p = build_m(cmdlist[j], m, prgctr);
-			return p;
+			try {
+				var p = build_m(cmdlist[j], m, prgctr);
+				if ((p.length + 1 ? p[0] : p) >= NOTOPCODE) {
+					if (result == undefined) result = p;
+				} else {
+					return p;
+				}
+			} catch (e) {
+				if (exc == null) exc = e;
+			}
 		}
 	}
-	return undefined;
+	if (result == undefined && exc != null) throw exc;
+	return result;
 
 }
 function pint(s) {
