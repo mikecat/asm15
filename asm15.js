@@ -746,14 +746,10 @@ function assemble() {
 					throw new Error("unknown mode " + mode);
 				}
 				continue;
-			} else if (line.slice(0,4) == "orgr") {
-				outlist.push([i,prgctr,DIRECTIVE]);
-				var new_prgctr = startadr + pint(cutComment(line.substr(4)));
-				prgctr = new_prgctr;
-				continue;
 			} else if (line.slice(0,3) == "org") {
+				var is_r = line.substr(3,1) == "r";
 				outlist.push([i,prgctr,DIRECTIVE]);
-				var new_prgctr = pint(cutComment(line.substr(3)));
+				var new_prgctr = (is_r ? startadr : 0) + pint(cutComment(line.substr(is_r ? 4 : 3)));
 				prgctr = new_prgctr;
 				continue;
 			} else if (line.slice(0,5) == "align") {
