@@ -910,7 +910,7 @@ var CPU_RV32C = function() {
 							if (getu(12, 1) === 0) {
 								if (rs === 0) { // c.jr
 									if (rd === 0) reserved();
-									this.pc = this.r[rd];
+									this.pc = norm(this.r[rd] & 0xfffffffe);
 								} else { // c.mv
 									this.r[rd] = this.r[rs];
 								}
@@ -920,7 +920,7 @@ var CPU_RV32C = function() {
 										throw "C.EBREAK is executed";
 									} else { // c.jalr
 										this.r[1] = this.pc;
-										this.pc = this.r[rd];
+										this.pc = norm(this.r[rd] & 0xfffffffe);
 									}
 								} else { // c.add
 									this.r[rd] = norm(this.r[rd] + this.r[rs]);
