@@ -739,6 +739,10 @@ var CPU_RV32C = function() {
 				while (n < 0) n += v;
 				return n;
 			};
+			var s = function(v) {
+				if (v >= 0 && (v & 0x80000000)) return v - 0x100000000;
+				return v;
+			};
 			var checkmem = function(addr, n, iswrite) {
 //				if (addr % n != 0) {
 //					throw "unaligned memory " + (iswrite ? "write" : "read") +
@@ -943,6 +947,335 @@ var CPU_RV32C = function() {
 					}
 					break;
 				case 0x3:
+				{
+					var rd = getu(7, 5);
+					var funct3 = getu(12, 3);
+					var rs1 = getu(15, 5);
+					var rs2 = getu(20, 5);
+					switch (getu(0, 7)) {
+						case 0x37: // lui
+							this.r[rd] = norm(code & 0xfffff000);
+							break;
+						case 0x17: // auipc
+							this.r[rd] = norm(this.pc - 4 + (code & 0xfffff000));
+							break;
+						case 0x6F: //jal
+						{
+							var offset = getns([[31,1,20],[21,10,1],[20,1,11],[12,8,12]]);
+							this.r[rd] = this.pc;
+							this.pc = norm(this.pc - 4 + offset);
+						}
+						break;
+						case 0x67:
+							if (funct3 === 0) { // jalr
+								this.r[rd] = this.pc;
+								this.pc = norm((this.r[rs1] + getn(20, 12)) & 0xfffffffe);
+							} else {
+								unsupported();
+							}
+							break;
+						case 0x63:
+						{
+							var offset = getns([[31,1,12],[25,6,5],[8,4,1],[7,1,11]]);
+							var dest = norm(this.pc - 4 + offset);
+							switch (funct3) {
+								case 0:	// beq
+									if (this.r[rs1] === this.r[rs2]) this.pc = dest;
+									break;
+								case 1:	// bne
+									if (this.r[rs1] !== this.r[rs2]) this.pc = dest;
+									break;
+								case 4:	// blt
+									if (s(this.r[rs1]) < s(this.r[rs2])) this.pc = dest;
+									break;
+								case 5:	// bge
+									if (s(this.r[rs1]) >= s(this.r[rs2])) this.pc = dest;
+									break;
+								case 6:	// bltu
+									if (this.r[rs1] < this.r[rs2]) this.pc = dest;
+									break;
+								case 7:	// bgeu
+									if (this.r[rs1] >= this.r[rs2]) this.pc = dest;
+									break;
+								default:
+									unsupported();
+									break;
+							}
+						}
+						break;
+						case 0x03:
+						{
+							var offset = getn(20, 12);
+							var addr = norm(this.r[rs1] + offset);
+							switch (funct3) {
+								case 0: // lb
+								{
+									this.checkmem(addr, 1, false);
+									var res = this.mem.get(addr);
+									if (res & 0x80) res = norm(res | 0xffffff00);
+									this.r[rd] = res;
+								}
+								break;
+								case 1: // lh
+								{
+									this.checkmem(addr, 2, false);
+									var res = this.mem.get16(addr);
+									if (res & 0x8000) res = norm(res | 0xffff0000);
+									this.r[rd] = res;
+								}
+								break;
+								case 2: // lw
+									this.checkmem(addr, 4, false);
+									this.r[rd] = this.mem.get32(addr);
+									break;
+								case 4: // lbu
+									this.checkmem(addr, 1, false);
+									this.r[rd] = this.mem.get(addr);
+									break;
+								case 5: // lhu
+									this.checkmem(addr, 2, false);
+									this.r[rd] = this.mem.get16(addr);
+									break;
+								default:
+									unsupported();
+									break;
+							}
+						}
+						break;
+						case 0x23:
+						{
+							var offset = getns([[25,7,5],[7,5,0]]);
+							var addr = norm(this.r[rs1] + offset);
+							switch (funct3) {
+								case 0: // sb
+									this.checkmem(addr, 1, true);
+									this.mem.set(addr, this.r[rs2]);
+									break;
+								case 1: // sh
+									this.checkmem(addr, 2, true);
+									this.mem.set16(addr, this.r[rs2]);
+									break;
+								case 2: // sw
+									this.checkmem(addr, 4, true);
+									this.mem.set32(addr, this.r[rs2]);
+									break;
+								default:
+									unsupported();
+									break;
+							}
+						}
+						break;
+						case 0x13:
+						{
+							var imm = getn(20, 12);
+							switch (funct3) {
+								case 0: // addi
+									this.r[rd] = norm(this.r[rs1] + imm);
+									break;
+								case 2: // slti
+									this.r[rd] = s(this.r[rs1]) < imm ? 1 : 0;
+									break;
+								case 3: // sltiu
+									this.r[rd] = this.r[rs1] < norm(imm) ? 1 : 0;
+									break;
+								case 4: // xori
+									this.r[rd] = norm(this.r[rs1] ^ imm);
+									break;
+								case 6: // or
+									this.r[rd] = norm(this.r[rs1] | imm);
+									break;
+								case 7: // andi
+									this.r[rd] = norm(this.r[rs1] & imm);
+									break;
+								case 1:
+									if (getu(25, 7) === 0) { // slli
+										var shamt = getu(20, 5);
+										this.r[rd] = norm((this.r[rs1] << shamt) & 0xffffffff);
+									} else {
+										unsupported();
+									}
+									break;
+								case 5:
+								{
+									var shamt = getu(20, 5);
+									switch (getu(25, 7)) {
+										case 0x00: // srli
+											this.r[rd] = norm(this.r[rs1] >>> shamt);
+											break;
+										case 0x20: // srai
+											this.r[rd] = norm(this.r[rs1] >> shamt);
+											break;
+										default:
+											unsupported();
+											break;
+									}
+								}
+								break;
+								default:
+									unsupported();
+									break;
+							}
+						}
+						break;
+						case 0x33:
+							switch (getu(25, 7)) {
+								case 0x00:
+									switch (funct3) {
+										case 0: // add
+											this.r[rd] = norm(this.r[rs1] + this.r[rs2]);
+											break;
+										case 1: // sll
+											this.r[rd] = norm((this.r[rs1] << (this.r[rs2] & 0x1f)) & 0xffffffff);
+											break;
+										case 2: // slt
+											this.r[rd] = s(this.r[rs1]) < s(this.r[rs2]) ? 1 : 0;
+											break;
+										case 3: // sltu
+											this.r[rd] = this.r[rs1] < this.r[rs2] ? 1 : 0;
+											break;
+										case 4: // xor
+											this.r[rd] = norm(this.r[rs1] ^ this.r[rs2]);
+											break;
+										case 5: // srl
+											this.r[rd] = norm(this.r[rs1] >>> (this.r[rs2] & 0x1f));
+											break;
+										case 6: // or
+											this.r[rd] = norm(this.r[rs1] | this.r[rs2]);
+											break;
+										case 7: // and
+											this.r[rd] = norm(this.r[rs1] & this.r[rs2]);
+											break;
+										default:
+											unsupported();
+											break;
+									}
+									break;
+								case 0x20:
+									switch (funct3) {
+										case 0: // sub
+											this.r[rd] = norm(this.r[rs1] - this.r[rs2]);
+											break;
+										case 5: // sra
+											this.r[rd] = norm(this.r[rs1] >> (this.r[rs2] & 0x1f));
+											break;
+										default:
+											unsupported();
+											break;
+									}
+									break;
+								case 0x01:
+									switch (funct3) {
+										case 0: // mul
+										case 1: // mulh
+										case 2: // mulhsu
+										case 3: // mulhu
+										{
+											var v1 = this.r[rs1], v2 = this.r[rs2];
+											var minus = false;
+											if ((v1 & 0x80000000) && (funct3 < 3)) {
+												v1 = norm(-v1);
+												minus = !minus;
+											}
+											if ((v2 & 0x80000000) && (funct3 < 2)) {
+												v2 = norm(-v2);
+												minus = !minus;
+											}
+											var v1l = v1 & 0xffff, v1h = (v1 >>> 16) & 0xffff;
+											var v2l = v2 & 0xffff, v2h = (v2 >>> 16) & 0xffff;
+											var ll = v1l * v2l;
+											var lh = v1l * v1h, hl = v1h * v2l;
+											var hh = v1h * v2h;
+											var rl_l = ll & 0xffff;
+											var rl_h = ((ll >>> 16) & 0xffff) + (lh & 0xffff) + (hl & 0xffff);
+											var rh = norm(hh + ((rl_h >>> 16) & 0xffff));
+											var rl = norm(((rl_h & 0xffff) << 16) | rl_l);
+											if (minus) {
+												rh = norm(~rh);
+												rl = norm(~rl);
+												if (rl === 0xffffffff) {
+													rh = norm(rh + 1);
+													rl = 0;
+												} else {
+													rl = norm(rl + 1);
+												}
+											}
+											if (funct3 === 0) {
+												this.r[rd] = rl;
+											} else {
+												this.r[rd] = rh;
+											}
+										}
+										break;
+										case 4: // div
+											if (this.r[rs2] === 0) {
+												this.r[rd] = 0xffffffff;
+											} else if (this.r[rs1] === 0x80000000 && this.r[rs2] === 0xffffffff) {
+												this.r[rd] = 0x80000000;
+											} else {
+												this.r[rd] = norm(~~(s(this.r[rs1]) / s(this.r[rs2])));
+											}
+											break;
+										case 5: // divu
+											if (this.r[rs2] === 0) {
+												this.r[rd] = 0xffffffff;
+											} else {
+												this.r[rd] = norm(~~(this.r[rs1] / this.r[rs2]));
+											}
+											break;
+										case 6: // rem
+											if (this.r[rs2] === 0) {
+												this.r[rd] = this.r[rs1];
+											} else if (this.r[rs1] === 0x80000000 && this.r[rs2] === 0xffffffff) {
+												this.r[rd] = 0;
+											} else {
+												var dividend = s(this.r[rs1]);
+												var divisor = s(this.r[rs2]);
+												var quotient = s(~~(dividend / divisor));
+												this.r[rd] = norm(dividend - divisor * quotient);
+											}
+											break;
+										case 7: // remu
+											if (this.r[rs2] === 0) {
+												this.r[rd] = this.r[rs1];
+											} else {
+												this.r[rd] = norm(this.r[rs1] % this.r[rs2]);
+											}
+											break;
+										default:
+											unsupported();
+											break;
+									}
+									break;
+								default:
+									unsupported();
+									break;
+							}
+							break;
+						case 0x0F: // fence
+							// ignore (reserved conifiguration -> treat as normal fence)
+							break;
+						case 0x73:
+							if (rd === 0 && funct3 === 0 && rs1 === 0) {
+								switch (getu(20, 12)) {
+									case 0: // ecall
+										throw "ECALL executed";
+									case 1: // ebreak
+										throw "EBREAK executed";
+									default:
+										unsupported();
+										break;
+								}
+							} else {
+								unsupported();
+							}
+							break;
+						default:
+							unsupported();
+							break;
+					}
+				}
+				break;
+				default:
 					unsupported();
 					break;
 			}
