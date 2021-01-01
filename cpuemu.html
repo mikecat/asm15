@@ -994,8 +994,8 @@ window.onload = function() {
 		r.textContent = "R" + i + ": ";
 		r.ondblclick = (function(idx) {
 			return function() {
-				var rawRes = parseRegValue(prompt("R" + idx + "の値を入力", cpu.r[idx]));
-				if (rawRes !== null && !isNaN(res)) {
+				var res = parseRegValue(prompt("R" + idx + "の値を入力", cpu.r[idx]));
+				if (res !== null && !isNaN(res)) {
 					cpu.r[idx] = res;
 					showRegs();
 				}
@@ -1024,8 +1024,8 @@ window.onload = function() {
 		if (i !== 0) {
 			r.ondblclick = (function(idx) {
 				return function() {
-					var rawRes = parseRegValue(prompt("R" + idx + "の値を入力", cpu.r[idx]));
-					if (rawRes !== null && !isNaN(res)) {
+					var res = parseRegValue(prompt("R" + idx + "の値を入力", cpu.r[idx]));
+					if (res !== null && !isNaN(res)) {
 						cpu.r[idx] = res;
 						showRegs();
 					}
@@ -1038,8 +1038,8 @@ window.onload = function() {
 		var r = create("div");
 		r.textContent = "PC: ";
 		r.ondblclick =  function() {
-			var rawRes = parseRegValue(prompt("PCの値を入力", cpu.pc));
-			if (rawRes !== null && !isNaN(res)) {
+			var res = parseRegValue(prompt("PCの値を入力", cpu.pc));
+			if (res !== null && !isNaN(res)) {
 				cpu.pc = res;
 				showRegs();
 			}
@@ -1243,7 +1243,7 @@ window.onload = function() {
 		} else if (cpu_mode === MODE_RV32C) {
 			cpu.r[11] = 0x100;
 			cpu.r[2] = 0x1000; // SP
-			cpu.r[1] = 0xDEADBEEF; // RA
+			cpu.r[1] = 0xDEADBEEE; // RA
 			cpu.pc = 0;
 		}
 		cpu.mem.ram = [];
