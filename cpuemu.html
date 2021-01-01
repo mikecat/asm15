@@ -863,7 +863,7 @@ window.onload = function() {
 		} else if (realMode === 0 && prevRealMode > 0 && memDumpStartAddress === 0x10000000) {
 			memDumpStartAddress = 0;
 		}
-		prevRealMode = 0;
+		prevRealMode = realMode;
 		memDumpUpdateAll();
 		if (realMode > 0) {
 			var font = realMode >= 12 ? ijfont_1_2 : ijfont_1_1;
