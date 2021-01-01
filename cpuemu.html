@@ -743,16 +743,18 @@ var CPU_RV32C = function() {
 				if (v >= 0 && (v & 0x80000000)) return v - 0x100000000;
 				return v;
 			};
-			var checkmem = function(addr, n, iswrite) {
-//				if (addr % n != 0) {
-//					throw "unaligned memory " + (iswrite ? "write" : "read") +
-//						" #" + addr.toString(16);
-//				}
-				if (!iswrite && !this.mem.check(addr, n) &&
-				get("uninitialized_memory").value === "halt") {
-					throw "read from uninitialized memory #" + addr.toString(16);
-				}
-			};
+			var checkmem = (function(mem) {
+				return function(addr, n, iswrite) {
+//					if (addr % n != 0) {
+//						throw "unaligned memory " + (iswrite ? "write" : "read") +
+//							" #" + addr.toString(16);
+//					}
+					if (!iswrite && !mem.check(addr, n) &&
+					get("uninitialized_memory").value === "halt") {
+						throw "read from uninitialized memory #" + addr.toString(16);
+					}
+				};
+			})(this.mem);
 			var unsupported = function() {
 				if (get("unsupported_op").value === "halt") {
 					throw "unsupported instruction";
@@ -777,11 +779,11 @@ var CPU_RV32C = function() {
 						}
 						break;
 					case 0x2: // c.lw
-						this.checkmem(addr, 4, false);
+						checkmem(addr, 4, false);
 						this.r[rd] = this.mem.get32(addr);
 						break;
 					case 0x6: // c.sw
-						this.checkmem(addr, 4, true);
+						checkmem(addr, 4, true);
 						this.mem.set32(addr, this.r[rd]);
 						break;
 					default:
@@ -903,7 +905,7 @@ var CPU_RV32C = function() {
 							var offset = getus([[12,1,5],[4,3,2],[2,2,6]]);
 							var rd = getu(7, 5);
 							var addr = norm(this.r[2] + offset);
-							this.checkmem(addr, 4, false);
+							checkmem(addr, 4, false);
 							this.r[rd] = this.mem.get32(addr);
 						}
 						break;
@@ -937,7 +939,7 @@ var CPU_RV32C = function() {
 							var offset = getus([[9,4,2],[7,2,6]]);
 							var rs = getu(2, 5);
 							var addr = norm(this.r[2] + offset);
-							this.checkmem(addr, 4, true);
+							checkmem(addr, 4, true);
 							this.mem.set32(addr, this.r[rs]);
 						}
 						break;
@@ -1010,7 +1012,7 @@ var CPU_RV32C = function() {
 							switch (funct3) {
 								case 0: // lb
 								{
-									this.checkmem(addr, 1, false);
+									checkmem(addr, 1, false);
 									var res = this.mem.get(addr);
 									if (res & 0x80) res = norm(res | 0xffffff00);
 									this.r[rd] = res;
@@ -1018,22 +1020,22 @@ var CPU_RV32C = function() {
 								break;
 								case 1: // lh
 								{
-									this.checkmem(addr, 2, false);
+									checkmem(addr, 2, false);
 									var res = this.mem.get16(addr);
 									if (res & 0x8000) res = norm(res | 0xffff0000);
 									this.r[rd] = res;
 								}
 								break;
 								case 2: // lw
-									this.checkmem(addr, 4, false);
+									checkmem(addr, 4, false);
 									this.r[rd] = this.mem.get32(addr);
 									break;
 								case 4: // lbu
-									this.checkmem(addr, 1, false);
+									checkmem(addr, 1, false);
 									this.r[rd] = this.mem.get(addr);
 									break;
 								case 5: // lhu
-									this.checkmem(addr, 2, false);
+									checkmem(addr, 2, false);
 									this.r[rd] = this.mem.get16(addr);
 									break;
 								default:
@@ -1048,15 +1050,15 @@ var CPU_RV32C = function() {
 							var addr = norm(this.r[rs1] + offset);
 							switch (funct3) {
 								case 0: // sb
-									this.checkmem(addr, 1, true);
+									checkmem(addr, 1, true);
 									this.mem.set(addr, this.r[rs2]);
 									break;
 								case 1: // sh
-									this.checkmem(addr, 2, true);
+									checkmem(addr, 2, true);
 									this.mem.set16(addr, this.r[rs2]);
 									break;
 								case 2: // sw
-									this.checkmem(addr, 4, true);
+									checkmem(addr, 4, true);
 									this.mem.set32(addr, this.r[rs2]);
 									break;
 								default:
