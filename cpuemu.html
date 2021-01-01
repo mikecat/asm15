@@ -689,6 +689,15 @@ var CPU_RV32C = function() {
 			return 0;
 		}
 		var code = this.mem.get16(iaddr);
+		if ((code & 3) == 3) { // 32-bit instruction
+			this.pc += 2;
+			if (this.pc >= 0x100000000) this.pc -= 0x100000000;
+			if (!this.mem.check(this.pc, 2) && get("uninitialized_memory").value === "halt") {
+				alert("read instruction from uninitialized memory #" + this.pc.toString(16));
+				return 0;
+			}
+			code = code | (this.mem.get16(this.pc) << 16);
+		}
 //		this.code = code;
 		this.pc += 2;
 		this.instCount++;
@@ -703,6 +712,25 @@ var CPU_RV32C = function() {
 				var res = (code >> start) & ((1 << n) - 1);
 				if ((res >> (n - 1)) != 0)
 					return res - (1 << n);
+				return res;
+			};
+			var getus = function(poses) {
+				var res = 0;
+				for (var i = 0; i < poses.length; i++) {
+					res |= getu(poses[i][0], poses[i][1]) << poses[i][2];
+				}
+				return res;
+			};
+			var getns = function(poses) {
+				var res = 0;
+				var maxPos = 1;
+				for (var i = 0; i < poses.length; i++) {
+					res |= getu(poses[i][0], poses[i][1]) << poses[i][2];
+					var pos = poses[i][1] + poses[i][2];
+					if (pos > maxPos) maxPos = pos;
+				}
+				if ((res >> (maxPos - 1)) != 0)
+					return res - (1 << maxPos);
 				return res;
 			};
 			var norm = function(n) {
@@ -726,13 +754,206 @@ var CPU_RV32C = function() {
 					throw "unsupported instruction";
 				}
 			};
-			unsupported();
+			var reserved = function() {
+				throw "reserved";
+			};
+			switch(getu(0, 2)) {
+				case 0x0:
+				{
+					var rd = getu(2, 3) + 8;
+					var rs1 = getu(7, 3) + 8;
+					var offset = getus([[10,3,3],[6,1,2],[5,1,6]]);
+					var addr = norm(this.r[rs1] + offset);
+					switch (getu(13, 3)) {
+					case 0x0: // c.addi4spn
+						{
+							var u = getus([[11,2,4],[7,4,6],[6,1,2],[5,1,3]]);
+							if (u == 0) reserved();
+							this.r[rd] = norm(this.r[2] + u);
+						}
+						break;
+					case 0x2: // c.lw
+						this.checkmem(addr, 4, false);
+						this.r[rd] = this.mem.get32(addr);
+						break;
+					case 0x6: // c.sw
+						this.checkmem(addr, 4, true);
+						this.mem.set32(addr, this.r[rd]);
+						break;
+					default:
+						unsupported();
+						break;
+					}
+				}
+				break;
+				case 0x1:
+				{
+					var imm = getns([[12,1,5],[2,5,0]]);
+					var rd = getu(7, 5);
+					switch (getu(13, 3)) {
+						case 0x0: // c.nop / c.addi
+							this.r[rd] = norm(this.r[rd] + imm);
+							break;
+						case 0x01: // c.jal
+						{
+							var offset = getns([[12,1,11],[11,1,4],[9,2,8],[8,1,10],[7,1,6],[6,1,7],[3,3,1],[2,1,5]]);
+							this.r[1] = this.pc;
+							this.pc = norm(this.pc - 2 + offset);
+						}
+						break;
+						case 0x02: // c.li
+							this.r[rd] = imm;
+							break;
+						case 0x03:
+							if (rd == 2) { // c.addi16sp
+								var offset = getns([[12,1,9],[6,1,4],[5,1,6],[3,2,7],[2,1,5]]);
+								this.r[2] = norm(this.r[2] + offset);
+							} else { // c.lui
+								this.r[rd] = norm((imm << 12) & 0xffffffff);
+							}
+							break;
+						case 0x04:
+						{
+							var rdd = getu(7, 3) + 8;
+							switch (getu(10, 2)) {
+								case 0x0: // c.srli
+									if (imm & 0x20) reserved();
+									this.r[rdd] = norm(this.r[rdd] >>> imm);
+									break;
+								case 0x1: // c.srai
+									if (imm & 0x20) reserved();
+									this.r[rdd] = norm(this.r[rdd] >> imm);
+									break;
+								case 0x2: // c.andi
+									this.r[rdd] = norm(this.r[rdd] & imm);
+									break;
+								case 0x3:
+									if (getu(12, 1) == 0) {
+										var rs2d = getu(2, 3) + 8;
+										switch (getu(5, 2)) {
+											case 0x0: // c.sub
+												this.r[rdd] = norm(this.r[rdd] - this.r[rs2d]);
+												break;
+											case 0x1: // c.xor
+												this.r[rdd] = norm(this.r[rdd] ^ this.r[rs2d]);
+												break;
+											case 0x2: // c.or
+												this.r[rdd] = norm(this.r[rdd] | this.r[rs2d]);
+												break;
+											case 0x3: // c.and
+												this.r[rdd] = norm(this.r[rdd] & this.r[rs2d]);
+												break;
+											default:
+												unsupported();
+												break;
+										}
+									} else {
+										reserved();
+									}
+									break;
+								default:
+									unsupported();
+									break;
+							}
+						}
+						break;
+						case 0x05: // c.j
+						{
+							var offset = getns([[12,1,11],[11,1,4],[9,2,8],[8,1,10],[7,1,6],[6,1,7],[3,3,1],[2,1,5]]);
+							this.pc = norm(this,pc - 2 + offset);
+						}
+						break;
+						case 0x06: case 0x07:
+						{
+							var rsd = getu(7, 3) + 8;
+							var offset = getns([[12,1,8],[10,2,3],[5,2,6],[3,2,1],[2,1,5]]);
+							if (getu(13, 3) === 0x06) { // c.beqz
+								if (this.r[rsd] === 0) {
+									this.pc = norm(this.pc - 2 + offset);
+								}
+							} else { // c.bnez
+								if (this.r[rsd] !== 0) {
+									this.pc = norm(this.pc - 2 + offset);
+								}
+							}
+						}
+						break;
+						default:
+							unsupported();
+							break;
+					}
+				}
+				break;
+				case 0x2:
+					switch (getu(13, 3)) {
+						case 0x0: // c.slli
+						{
+							if (getu(12, 1) != 0) reserved();
+							var rd = getu(7, 5);
+							var imm = getu(2, 5);
+							this.r[rd] = norm(this.r[rd] << imm);
+						}
+						break;
+						case 0x2: // c.lwsp
+						{
+							var offset = getus([[12,1,5],[4,3,2],[2,2,6]]);
+							var rd = getu(7, 5);
+							var addr = norm(this.r[2] + offset);
+							this.checkmem(addr, 4, false);
+							this.r[rd] = this.mem.get32(addr);
+						}
+						break;
+						case 0x4:
+						{
+							var rd = getu(7, 5);
+							var rs = getu(2, 5);
+							if (getu(12, 1) === 0) {
+								if (rs === 0) { // c.jr
+									if (rd === 0) reserved();
+									this.pc = this.r[rd];
+								} else { // c.mv
+									this.r[rd] = this.r[rs];
+								}
+							} else {
+								if (rs === 0) {
+									if (rd === 0) { // c.ebreak
+										throw "C.EBREAK is executed";
+									} else { // c.jalr
+										this.r[1] = this.pc;
+										this.pc = this.r[rd];
+									}
+								} else { // c.add
+									this.r[rd] = norm(this.r[rd] + this.r[rs]);
+								}
+							}
+						}
+						break;
+						case 0x6: // c.swsp
+						{
+							var offset = getus([[9,4,2],[7,2,6]]);
+							var rs = getu(2, 5);
+							var addr = norm(this.r[2] + offset);
+							this.checkmem(addr, 4, true);
+							this.mem.set32(addr, this.r[rs]);
+						}
+						break;
+						default:
+							unsupported();
+							break;
+					}
+					break;
+				case 0x3:
+					unsupported();
+					break;
+			}
 		} catch(e) {
 			var inst = code.toString(2);
 			while (inst.length < 16) inst = "0" + inst;
 			alert("" + e + "\n\ninstruction address: #" + iaddr.toString(16) +
 				"\ninstruction: " + inst);
 			return 0;
+		} finally {
+			this.r[0] = 0;
 		}
 //		dump(this.r);
 		return 1;
