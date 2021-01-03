@@ -86,6 +86,8 @@ var token_dict = {
 "mulhu":"mulhu",
 "divu":"divu",
 "remu":"remu",
+"<":"<",
+">":">",
 "ltu":"ltu",
 "jal":"jal",
 "jalr":"jalr",
