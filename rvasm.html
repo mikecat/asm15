@@ -123,7 +123,7 @@ Rd' = [Rn' + u7]L	0	1	0	u5-3			Rn'			u2	u6	Rd'			0	0	c.lw
 */})
 </script>
 ※[]後の記号でメモリサイズと符号を表す（W:2byte、L:4byte、C:符号付き1byte、S:符号付き2byte）<br>
-※u7:4byte単位のオフセット<br>
+※u7:1byte単位のオフセット (4の倍数でなければならない)<br>
 
 <table id="t1188d" class=tarmasm></table>
 <script>
@@ -150,7 +150,7 @@ Rd' = SP + u10	0	0	0	u5-4		u9-6				u2	u3	Rd'			0	0	c.addi4spn
 SP += n10	0	1	1	n9	0	0	0	1	0	n4	n6	n8-7		n5	0	1	c.addi16sp
 */})
 </script>
-※PUSH: [SP + u8]L = Rs, POP: Rd = [SP + u8]L (スタックポインタは変化しない)<br>
+※PUSH: [SP + 4*u8]L = Rs, POP: Rd = [SP + 4*u8]L (スタックポインタは変化しない)<br>
 ※u8/u10:4byte単位のオフセット<br>
 ※SP+=n10: n10は16byte単位<br>
 ※SP = R2<br>
