@@ -133,7 +133,7 @@ function rlist(){
 				}else if (r==14||r==15){
 					ret|=0x100;
 				}else{
-					return ASMERR
+					throw new Error("unsupported register");
 				}
 			} else if (r=="pc" || r=="lr"){
 				ret|=0x100;
@@ -178,7 +178,7 @@ function n(bits, s, ofs, div, align4) {
 					rel = ad >> div; // 0x0fffffffc -> 0x0fffffffe
 //					alert(lbl_dict[lbl].toString(16) + " " + pc.toString(16) + " " + div + " " + ((pc & 0x0fffffffe)) + " " + lbl + " " + rel);
 					if (rel > mx || rel < mn) {
-						return ASMERR
+						throw new Error("too far");
 					}
 					d = d.replace(lbl, rel, "g");
 				} else {
@@ -847,7 +847,7 @@ function assemble() {
 					outlist[i+j] = [ lno, prgctr+2*j, p[j] ];
 					
 					if (outlist[i+j][2] == YET) {
-						alert("label not found in " + lno + "\n" + orglines[lno]);
+						alert("label not found in " + (lno + 1) + "\n" + orglines[lno]);
 					}
 				}
 				i += p.length - 1;
@@ -855,7 +855,7 @@ function assemble() {
 				outlist[i] = [ lno, prgctr, p ];
 				
 				if (outlist[i][2] == YET) {
-					alert("label not found in " + lno + "\n" + orglines[lno]);
+					alert("label not found in " + (lno + 1) + "\n" + orglines[lno]);
 				}
 			}
 		}
