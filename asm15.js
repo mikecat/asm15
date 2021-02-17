@@ -37,6 +37,7 @@ var token_dict = {
 
 "cond":"(eq|ne|cs|cc|mi|pl|vs|vc|hi|ls|ge|lt|gt|le|hs|lo)",
 "al":"al",
+"m0":"m0",
 
 "*":"\\*",
 "/":"/",
@@ -436,6 +437,7 @@ var cmdlist_m0 = [
 ["nop",0],
 ["nopf",0x46c0],
 
+["if m0 goto n",[0xe0002fb7],n(11,16,-3,1)],
 ];
 
 var cmdlist_rv32c = [
@@ -535,6 +537,7 @@ var cmdlist_rv32c = [
 ["ecall",[0x00000073]],
 ["ebreak",[0x00100073]],
 
+["if m0 goto n",[0xe0002fb7],n(11,16,-3,1)],
 ];
 
 var patlist_m0 = [];
