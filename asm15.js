@@ -838,25 +838,29 @@ function assemble() {
 		if (p >= NOTOPCODE) {
 		}
 		if (p == YET) {
-			cmdlist = pats[lno].cmdlist;
-			patlist = pats[lno].patlist;
-			p = asmln(line,prgctr);
-			if (p != undefined && p.length + 1) {
-				// multiple-word instruction
-				for (var j = 0; j < p.length; j++) {
-					outlist[i+j] = [ lno, prgctr+2*j, p[j] ];
+			try {
+				cmdlist = pats[lno].cmdlist;
+				patlist = pats[lno].patlist;
+				p = asmln(line,prgctr);
+				if (p != undefined && p.length + 1) {
+					// multiple-word instruction
+					for (var j = 0; j < p.length; j++) {
+						outlist[i+j] = [ lno, prgctr+2*j, p[j] ];
+						
+						if (outlist[i+j][2] == YET) {
+							alert("label not found in " + (lno + 1) + "\n" + orglines[lno]);
+						}
+					}
+					i += p.length - 1;
+				} else {
+					outlist[i] = [ lno, prgctr, p ];
 					
-					if (outlist[i+j][2] == YET) {
+					if (outlist[i][2] == YET) {
 						alert("label not found in " + (lno + 1) + "\n" + orglines[lno]);
 					}
 				}
-				i += p.length - 1;
-			} else {
-				outlist[i] = [ lno, prgctr, p ];
-				
-				if (outlist[i][2] == YET) {
-					alert("label not found in " + (lno + 1) + "\n" + orglines[lno]);
-				}
+			} catch (e) {
+				alert("asm error in " + (lno + 1) + "\n" + orglines[lno] + "\n" + e);
 			}
 		}
 	}
