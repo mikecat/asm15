@@ -537,6 +537,9 @@ var cmdlist_rv32c = [
 ["ecall",[0x00000073]],
 ["ebreak",[0x00100073]],
 
+["cpsid",[0x300477f3]],
+["cpsie",[0x300467f3]],
+
 ["if m0 goto n",[0xe0002fb7],n(11,16,-3,1)],
 ];
 
