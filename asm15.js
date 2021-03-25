@@ -37,6 +37,7 @@ var token_dict = {
 
 "cond":"(eq|ne|cs|cc|mi|pl|vs|vc|hi|ls|ge|lt|gt|le|hs|lo)",
 "al":"al",
+"m0":"m0",
 
 "*":"\\*",
 "/":"/",
@@ -61,6 +62,7 @@ var token_dict = {
 "cpsid":"cpsid",
 "cpsie":"cpsie",
 "nop":"nop",
+"nopf":"nopf",
 "wfi":"wfi",
 "yield":"yield",
 "wfe":"wfe",
@@ -131,7 +133,7 @@ function rlist(){
 				}else if (r==14||r==15){
 					ret|=0x100;
 				}else{
-					return ASMERR
+					throw new Error("unsupported register");
 				}
 			} else if (r=="pc" || r=="lr"){
 				ret|=0x100;
@@ -176,7 +178,7 @@ function n(bits, s, ofs, div, align4) {
 					rel = ad >> div; // 0x0fffffffc -> 0x0fffffffe
 //					alert(lbl_dict[lbl].toString(16) + " " + pc.toString(16) + " " + div + " " + ((pc & 0x0fffffffe)) + " " + lbl + " " + rel);
 					if (rel > mx || rel < mn) {
-						return ASMERR
+						throw new Error("too far");
 					}
 					d = d.replace(lbl, rel, "g");
 				} else {
@@ -432,8 +434,10 @@ var cmdlist_m0 = [
 ["sev",0xbf40],
 ["bkpt n",0xbe00,bu(8,0)],
 ["svc n",0xdf00,bu(8,0)],
-["nop",0x46c0],
+["nop",0],
+["nopf",0x46c0],
 
+["if m0 goto n",[0xe0002fb7],n(11,16,-3,1)],
 ];
 
 var cmdlist_rv32c = [
@@ -457,8 +461,8 @@ var cmdlist_rv32c = [
 ["reg32 = divu ( reg32 , reg32 )",[0x02005033],b(5,7),b(5,15),b(5,20)],
 ["reg32 = remu ( reg32 , reg32 )",[0x02007033],b(5,7),b(5,15),b(5,20)],
 
-["h = [ h + n ] l",0x4000,b(3,2),b(3,7),d(bu(5,2),[[0,-1,2],[2,6,1],[3,10,3],[6,5,1]])],
-["[ h + n ] l = h",0xC000,b(3,7),d(bu(5,2),[[0,-1,2],[2,6,1],[3,10,3],[6,5,1]]),b(3,2)],
+["h = [ h + n ] l",0x4000,b(3,2),b(3,7),d(bu(7,0),[[0,-1,2],[2,6,1],[3,10,3],[6,5,1]])],
+["[ h + n ] l = h",0xC000,b(3,7),d(bu(7,0),[[0,-1,2],[2,6,1],[3,10,3],[6,5,1]]),b(3,2)],
 
 ["if ! h goto n",0xC001,b(3,7),d(n(8,1,0,1),[[0,-1,1],[1,3,2],[3,10,2],[5,2,1],[6,5,2],[8,12,1]])],
 ["if h goto n",0xE001,b(3,7),d(n(8,1,0,1),[[0,-1,1],[1,3,2],[3,10,2],[5,2,1],[6,5,2],[8,12,1]])],
@@ -535,6 +539,8 @@ var cmdlist_rv32c = [
 
 ["cpsid",[0x300477f3]],
 ["cpsie",[0x300467f3]],
+
+["if m0 goto n",[0xe0002fb7],n(11,16,-3,1)],
 ];
 
 var patlist_m0 = [];
@@ -835,25 +841,29 @@ function assemble() {
 		if (p >= NOTOPCODE) {
 		}
 		if (p == YET) {
-			cmdlist = pats[lno].cmdlist;
-			patlist = pats[lno].patlist;
-			p = asmln(line,prgctr);
-			if (p != undefined && p.length + 1) {
-				// multiple-word instruction
-				for (var j = 0; j < p.length; j++) {
-					outlist[i+j] = [ lno, prgctr+2*j, p[j] ];
+			try {
+				cmdlist = pats[lno].cmdlist;
+				patlist = pats[lno].patlist;
+				p = asmln(line,prgctr);
+				if (p != undefined && p.length + 1) {
+					// multiple-word instruction
+					for (var j = 0; j < p.length; j++) {
+						outlist[i+j] = [ lno, prgctr+2*j, p[j] ];
+						
+						if (outlist[i+j][2] == YET) {
+							alert("label not found in " + (lno + 1) + "\n" + orglines[lno]);
+						}
+					}
+					i += p.length - 1;
+				} else {
+					outlist[i] = [ lno, prgctr, p ];
 					
-					if (outlist[i+j][2] == YET) {
-						alert("label not found in " + lno + "\n" + orglines[lno]);
+					if (outlist[i][2] == YET) {
+						alert("label not found in " + (lno + 1) + "\n" + orglines[lno]);
 					}
 				}
-				i += p.length - 1;
-			} else {
-				outlist[i] = [ lno, prgctr, p ];
-				
-				if (outlist[i][2] == YET) {
-					alert("label not found in " + lno + "\n" + orglines[lno]);
-				}
+			} catch (e) {
+				alert("asm error in " + (lno + 1) + "\n" + orglines[lno] + "\n" + e);
 			}
 		}
 	}

@@ -82,6 +82,10 @@ window.onload = function() {
 DATA/DATABは1バイトずつ、DATAWは2バイトずつ、DATALは4バイトずつである。</dd>
 <dt>MODE (M0|RV32C)</dt>
 <dd>命令セットを切り替える。デフォルトはM0である。</dd>
+<dt>IF M0 GOTO @文字列</dt>
+<dd>命令セットがM0の時はジャンプし、RV32Cのときは素通りする命令を出力する。
+副作用として、命令セットがM0のときはフラグレジスタの値が、RV32CのときはR31レジスタの値が破壊される。<br>
+(参考：<a href="https://qiita.com/mikecat_mixc/items/5c14111e8f144d16b4fa">これまでの(LPC1114を用いた) IchigoJam と IchigoJam R 両対応のマシン語 - Qiita</a>)</dd>
 <dt>ORG 値</dt>
 <dd>出力位置(アドレス)を設定する。</dd>
 <dt>ORGR 値</dt>
