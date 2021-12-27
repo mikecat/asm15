@@ -288,6 +288,31 @@ IF GEU(Rm, Rs) GOTO n13	Rm0	1	1	1	n4-1				n11	1	1	0	0	0	1	1	bgeu
 <table id="t9905a" class=tarmasm></table>
 <script>
 makeTable("t9905a", function() {/*
+32bit CSR操作	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	op
+CSRRW Rd, u12, Rs	Rs0	0	0	1	Rd					1	1	1	0	0	1	1	csrrw
+	u12												Rs4-1				-
+CSRRS Rd, u12, Rs	Rs0	0	1	0	Rd					1	1	1	0	0	1	1	csrrs
+	u12												Rs4-1				-
+CSRRC Rd, u12, Rs	Rs0	0	1	1	Rd					1	1	1	0	0	1	1	csrrc
+	u12												Rs4-1				-
+CSRRWI Rd, u12, u5	u0	1	0	1	Rd					1	1	1	0	0	1	1	csrrwi
+	u12												u4-1				-
+CSRRSI Rd, u12, u5	u0	1	1	0	Rd					1	1	1	0	0	1	1	csrrsi
+	u12												u4-1				-
+CSRRCI Rd, u12, u5	u0	1	1	1	Rd					1	1	1	0	0	1	1	csrrci
+	u12												u4-1				-
+CPSID	0	1	1	1	0	0	0	0	0	1	1	1	0	0	1	1	csrrci
+	0	0	1	1	0	0	0	0	0	0	0	0	0	1	0	0	-
+CPSIE	0	1	1	0	0	0	0	0	0	1	1	1	0	0	1	1	csrrsi
+	0	0	1	1	0	0	0	0	0	0	0	0	0	1	0	0	-
+*/})
+</script>
+※CPSID:割り込み禁止 CSRRCI R0, #300, 8<br>
+※CPSIE:割り込み許可 CSRRSI R0, #300, 8
+
+<table id="t9906a" class=tarmasm></table>
+<script>
+makeTable("t9906a", function() {/*
 32bitその他	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	op
 FENCE	0	0	0	0	0	0	0	0	0	0	0	0	1	1	1	1	fence
 	0	0	0	0	PI	PO	PR	PW	SI	SO	SR	SW	0	0	0	0	-

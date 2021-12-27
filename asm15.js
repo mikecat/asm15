@@ -94,6 +94,12 @@ var token_dict = {
 "jal":"jal",
 "jalr":"jalr",
 "geu":"geu",
+"csrrw":"csrrw",
+"csrrs":"csrrs",
+"csrrc":"csrrc",
+"csrrwi":"csrrwi",
+"csrrsi":"csrrsi",
+"csrrci":"csrrci",
 "fence":"fence",
 "fence.tso":"fence\\.tso",
 "ecall":"ecall",
@@ -532,13 +538,19 @@ var cmdlist_rv32c = [
 ["if ltu ( reg32 , reg32 ) goto n",[0x00006063],b(5,15),b(5,20),d(n(12,1,0,1),[[0,-1,1],[1,8,4],[5,25,6],[11,7,1],[12,31,1]])],
 ["if geu ( reg32 , reg32 ) goto n",[0x00007063],b(5,15),b(5,20),d(n(12,1,0,1),[[0,-1,1],[1,8,4],[5,25,6],[11,7,1],[12,31,1]])],
 
+["csrrw reg32 , n , reg32",[0x00001073],b(5,7),bu(12,20),b(5,15)],
+["csrrs reg32 , n , reg32",[0x00002073],b(5,7),bu(12,20),b(5,15)],
+["csrrc reg32 , n , reg32",[0x00003073],b(5,7),bu(12,20),b(5,15)],
+["csrrwi reg32 , n , n",[0x00005073],b(5,7),bu(12,20),bu(5,15)],
+["csrrsi reg32 , n , n",[0x00006073],b(5,7),bu(12,20),bu(5,15)],
+["csrrci reg32 , n , n",[0x00007073],b(5,7),bu(12,20),bu(5,15)],
+["cpsid",[0x30047073]],
+["cpsie",[0x30046073]],
+
 ["fence",[0x0FF0000F]],
 ["fence.tso",[0x8330000F]],
 ["ecall",[0x00000073]],
 ["ebreak",[0x00100073]],
-
-["cpsid",[0x30047073]],
-["cpsie",[0x30046073]],
 
 ["if m0 goto n",[0xe0002fb7],n(11,16,-3,1)],
 ];
