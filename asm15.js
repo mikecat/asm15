@@ -106,6 +106,10 @@ var token_dict = {
 "ebreak":"ebreak",
 "(":"\\(",
 ")":"\\)",
+"iaddrw":"iaddrw",
+"iaddrl":"iaddrl",
+"daddrw":"daddrw",
+"daddrl":"daddrl",
 
 };
 
@@ -194,6 +198,16 @@ function n(bits, s, ofs, div, align4) {
 		}
 		d = pint(d) + ofs;
 		return (d & mask) << s;
+	}
+	return f;
+}
+function na(bits, s, or1) {
+	var fn = n(bits, s, 0, false, false);
+	var f = function(d, pc) {
+		var ret = fn(d, 0);
+		if (ret == YET) return ret;
+		if (or1) ret |= 1 << s;
+		return ret;
 	}
 	return f;
 }
@@ -444,6 +458,11 @@ var cmdlist_m0 = [
 ["nopf",0x46c0],
 
 ["if m0 goto n",[0xe0002fb7],n(11,16,-3,1)],
+
+["iaddrw n",0,na(16,0,true)],
+["iaddrl n",[0],na(32,0,true)],
+["daddrw n",0,na(16,0)],
+["daddrl n",[0],na(32,0)],
 ];
 
 var cmdlist_rv32c = [
@@ -553,6 +572,11 @@ var cmdlist_rv32c = [
 ["ebreak",[0x00100073]],
 
 ["if m0 goto n",[0xe0002fb7],n(11,16,-3,1)],
+
+["iaddrw n",0,na(16,0)],
+["iaddrl n",[0],na(32,0)],
+["daddrw n",0,na(16,0)],
+["daddrl n",[0],na(32,0)],
 ];
 
 var patlist_m0 = [];
