@@ -104,6 +104,7 @@ var token_dict = {
 "fence.tso":"fence\\.tso",
 "ecall":"ecall",
 "ebreak":"ebreak",
+"mret":"mret",
 "(":"\\(",
 ")":"\\)",
 "iaddrw":"iaddrw",
@@ -554,6 +555,7 @@ var cmdlist_rv32c = [
 ["fence.tso",[0x8330000F]],
 ["ecall",[0x00000073]],
 ["ebreak",[0x00100073]],
+["mret",[0x30200073]],
 
 ["if m0 goto n",[0xe0002fb7],n(11,16,-3,1)],
 
