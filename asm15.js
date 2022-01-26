@@ -649,7 +649,7 @@ function pint(s) {
 //	}
 }
 
-function pdat(ln,pc){
+function pdat(ln,pc,align){
 	var dtype=ln.charAt(4),start;
 	var sz,sz_dict={"b":1,"w":2,"l":4};
 	if (dtype in sz_dict){
@@ -674,7 +674,7 @@ function pdat(ln,pc){
 	ret = [];
 
 	//align
-	if (pc % 4 == 2) {
+	if (align && pc % 4 == 2) {
 		ret.unshift(0);
 	};
 	if (sz==1) {
@@ -757,11 +757,13 @@ function assemble() {
 			} else if (line.charAt(0) == "'" || line.slice(0,3) == "rem"){
 				outlist.push([i,prgctr,COMMENT]);
 				continue;
-			} else if (line.slice(0,4) == "data") {
-				if (prgctr % 2 == 1) {
+			} else if (line.slice(0,4) == "data" || line.slice(0,5) == "udata") {
+				var align = line.charAt(0) != "u";
+				var line2 = align ? line : line.substr(1);
+				if (align && prgctr % 2 == 1) {
 					prgctr++;
 				}
-				dlist = pdat(line, prgctr);
+				dlist = pdat(line2, prgctr, align);
 				for (j = 0; j < dlist.length; j++){
 					outlist.push([i, prgctr, dlist[j]]);
 					prgctr += 2;
