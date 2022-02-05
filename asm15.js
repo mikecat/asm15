@@ -278,10 +278,43 @@ function d(func, plist) {
 	};
 	return f;
 }
+function reg32_label() {
+	// reg32 = label
+	// auipc + addi
+	var nfunc = n(32, 0, 0, 0);
+	var bufunc = bu(5, 0);
+	var f = function(ar, pc) {
+		var target = nfunc(ar[2], pc);
+		if (target >= NOTOPCODE) {
+			return [target, target, target, target];
+		}
+		if (target & 0x800) target += 0x1000;
+		var reg = bufunc(ar[1], pc);
+		var auipc = (target & 0xfffff000) | (reg << 7) | 0x17;
+		var addi = ((target & 0xfff) << 20) | (reg << 15) | (reg << 7) | 0x13;
+		return [auipc & 0xffff, (auipc >> 16) & 0xffff, addi & 0xffff, (addi >> 16) & 0xffff];
+	};
+	return f;
+}
 function build_m(f, ar, pc) {
 	var op = f[1];
-	if (op.length + 1) {
-		// array means 32-bit instruction
+	if ((typeof op) == "number") {
+		// number : 16-bit instruction
+		for (var i = 1; i < ar.length; i++) {
+			//console.log(i + " " + ar[i]);
+			var _op = f[i + 1](ar[i], pc);
+			if (_op >= NOTOPCODE) {
+				return _op;
+			} else {
+				op = op | _op;
+			}
+		}
+		return 0xffff & op;
+	} else if ((typeof op) == "function") {
+		// function : custom (longer) instruction
+		return op(ar, pc);
+	} else {
+		// array : 32-bit instruction
 		op = op[0];
 		for (var i = 1; i < ar.length; i++) {
 			//console.log(i + " " + ar[i]);
@@ -293,17 +326,6 @@ function build_m(f, ar, pc) {
 			}
 		}
 		return [0xffff & op, 0xffff & (op >> 16)];
-	} else {
-		for (var i = 1; i < ar.length; i++) {
-			//console.log(i + " " + ar[i]);
-			var _op = f[i + 1](ar[i], pc);
-			if (_op >= NOTOPCODE) {
-				return _op;
-			} else {
-				op = op | _op;
-			}
-		}
-		return 0xffff & op;
 	}
 }
 
@@ -498,6 +520,7 @@ var cmdlist_rv32c = [
 
 ["reg32 = pc + n",[0x00000017],b(5,7),b(20,12)],
 ["reg32 = pc",[0x00000017],b(5,7)],
+["reg32 = label",reg32_label()],
 ["reg32 = reg32 + n",[0x00000013],b(5,7),b(5,15),b(12,20)],
 ["reg32 = reg32 + reg32",[0x00000033],b(5,7),b(5,15),b(5,20)],
 ["reg32 = reg32 - reg32",[0x40000033],b(5,7),b(5,15),b(5,20)],
