@@ -225,23 +225,21 @@ WFE	1	0	1	1	1	1	1	1	0	0	1	0	0	0	0	0	2	-
 SEV	1	0	1	1	1	1	1	1	0	1	0	0	0	0	0	0	1	-
 SVC	1	1	0	1	1	1	1	1	u8								-	-
 BKPT	1	0	1	1	1	1	1	0	u8								-	-
+DMB	1	1	1	1	0	0	1	1	1	0	1	1	1	1	1	1	4	-
+-	1	0	0	0	1	1	1	1	0	1	0	1	1	1	1	1	-	-
+DSB	1	1	1	1	0	0	1	1	1	0	1	1	1	1	1	1	4	-
+-	1	0	0	0	1	1	1	1	0	1	0	0	1	1	1	1	-	-
+ISB	1	1	1	1	0	0	1	1	1	0	1	1	1	1	1	1	4	-
+-	1	0	0	0	1	1	1	1	0	1	1	0	1	1	1	1	-	-
+Rd = spec_reg	1	1	1	1	0	0	1	1	1	1	1	0	1	1	1	1	4	-
+-	1	0	0	0	Rd				spec_reg								-	-
+spec_reg = Rd	1	1	1	1	0	0	1	1	1	0	0	0	Rd				4	※
+-	1	0	0	0	1	0	0	0	spec_reg								-	-
 */})
 </script>
 ※NOP:なにもしない(no operation) R0=R0&lt;&lt;0、NOPF: なにもしない(フラグも変化させない) R8=R8<br>
 ※CPSID:割込禁止、CPSIE:割込許可、WFI:割込待ち、SVC スーパーバイザーコール<br>
 ※SEV:イベント送信、WFE:イベント待ち、YIELD:NOPとして実行(?)<br>
-
-<table id="tunknown" class=tarmasm></table>
-<script>
-makeTable("tunknown", function() {/*
-マシン語不明	15	14	13	12	11	10	9	8	7	6	5	4	3	2	1	0	cycles	flags
-DMB	?																4	-
-DSB	?																4	-
-ISB	?																4	-
-Rd = spec_reg	?																4	-
-spec_reg = Rd	?																4	※
-*/})
-</script>
 ※spec_reg:APSR/IPSR/EPSR/IEPSR/IAPSR/EAPSR/PSR/MSP/PSP/PRIMASK/CONTROL<br>
 ※APSRへの書き込みは、フラグを変更する<br>
 ※DMB:データメモリバリア、DSB:データ同期バリア、ISB:命令同期バリア<br>

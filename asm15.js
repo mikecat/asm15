@@ -15,6 +15,7 @@ var token_dict = {
 "label":"(@.+)",
 "h":"r(8|9|10|11|12|13|14|15)",
 "reg":"r([0-7])",
+"reg16":"r([0-9]|1[0-5])",
 "reg32":"r([0-9]|[12][0-9]|3[01])",
 "push":"push",
 "pop":"pop",
@@ -69,6 +70,10 @@ var token_dict = {
 "sev":"sev",
 "bkpt":"bkpt",
 "svc":"svc",
+"dmb":"dmb",
+"dsb":"dsb",
+"isb":"isb",
+"sreg":"(apsr|ipsr|epsr|iepsr|iapsr|eapsr|psr|xpsr|msp|psp|primask|control)",
 ",":"\,",
 
 "bic":"bic",
@@ -296,6 +301,24 @@ function reg32_label() {
 	};
 	return f;
 }
+function sreg(s) {
+	var f = function(d, pc) {
+		var value = 0;
+		if (d == "apsr") value = 0;
+		else if (d == "iapsr") value = 1;
+		else if (d == "eapsr") value = 2;
+		else if (d == "xpsr" || d == "psr") value = 3;
+		else if (d == "ipsr") value = 5;
+		else if (d == "epsr") value = 6;
+		else if (d == "iepsr") value = 7;
+		else if (d == "msp") value = 8;
+		else if (d == "psp") value = 9;
+		else if (d == "primask") value = 16;
+		else if (d == "control") value = 20;
+		return value << s;
+	};
+	return f;
+}
 function build_m(f, ar, pc) {
 	var op = f[1];
 	if ((typeof op) == "number") {
@@ -459,6 +482,11 @@ var cmdlist_m0 = [
 ["sev",0xbf40],
 ["bkpt n",0xbe00,bu(8,0)],
 ["svc n",0xdf00,bu(8,0)],
+["dmb",[0x8f5ff3bf]],
+["dsb",[0x8f4ff3bf]],
+["isb",[0x8f6ff3bf]],
+["reg16 = sreg",[0x8000f3ef],b(4,24),sreg(16)],
+["sreg = reg16",[0x8800f380],sreg(16),b(4,0)],
 ["nop",0],
 ["nopf",0x46c0],
 
