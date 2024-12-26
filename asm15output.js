@@ -397,7 +397,7 @@ function m2hex(lines,outlist){
 	var p,p0,p1;
 	var bas="",i,line,out;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
-	var lines2=[],linehex=[],lineadr=-1;
+	var lines2=[],linehex=[],lineadr=-1,highadr=0;
 	
 	var chk = 0;
 	for (i=0; i<outlist.length; i++){
@@ -426,6 +426,13 @@ function m2hex(lines,outlist){
 			i--;
 		}
 		if (linehex.length>=16 || flush){
+			var hadr = (lineadr >> 16) & 0xffff;
+			if (hadr != highadr) {
+				var hadr1 = hadr >> 8;
+				var hadr2 = hadr & 0xff;
+				lines2.push(":02000004" + zero16(hadr1) + zero16(hadr2) + zero16(-(0x02 + 0x04 + hadr1 + hadr2) & 0xff));
+				highadr = hadr;
+			}
 			var ad1 = lineadr >> 8;
 			var ad2 = lineadr & 0xff;
 			chk -= linehex.length + ad1 + ad2;
@@ -436,6 +443,13 @@ function m2hex(lines,outlist){
 		}
 	}
 	if (linehex.length > 0) {
+		var hadr = (lineadr >> 16) & 0xffff;
+		if (hadr != highadr) {
+			var hadr1 = hadr >> 8;
+			var hadr2 = hadr & 0xff;
+			lines2.push(":02000004" + zero16(hadr1) + zero16(hadr2) + zero16(-(0x02 + 0x04 + hadr1 + hadr2) & 0xff));
+			highadr = hadr;
+		}
 		var ad1 = lineadr >> 8;
 		var ad2 = lineadr & 0xff;
 		chk -= linehex.length + ad1 + ad2;
