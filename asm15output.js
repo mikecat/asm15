@@ -1,3 +1,7 @@
+function lno(start,delta,cnt) {
+	if (isNaN(start) || isNaN(delta)) return "";
+	return (start + delta * cnt).toString(10) + " ";
+}
 function zero16(x) {
 	x = x & 0xff;
 	var p = x.toString(16).toUpperCase();
@@ -14,13 +18,13 @@ function zero2w(x){
 	p="0000000000000000".substr(0,16-p.length)+p;
 	return p;
 }
-function m2b16(lines,outlist){
+function m2b16(lines,outlist,s,d){
 	var p,p0,p1;
 	var bas="",i,line,out,nln;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var lines2=[],linehex=[],lineadr=-1;
 
-	nln=10;
+	nln=0;
 	
 	for(i=0; i<outlist.length; i++){
 		out=outlist[i];
@@ -49,15 +53,15 @@ function m2b16(lines,outlist){
 			i--;
 		}
 		if(linehex.length>=8 || flush){
-			lines2.push(""+nln.toString(10)+" POKE#"+lineadr.toString(16).toUpperCase()+
+			lines2.push(lno(s,d,nln)+"POKE#"+lineadr.toString(16).toUpperCase()+
 			","+linehex.join(","));
 			linehex=[];
-			nln+=10;
+			nln++;
 			lineadr=-1;
 		}
 	}
 	if(linehex.length>0){
-		lines2.push(""+nln.toString(10)+" POKE#"+lineadr.toString(16).toUpperCase()+
+		lines2.push(lno(s,d,nln)+"POKE#"+lineadr.toString(16).toUpperCase()+
 		","+linehex.join(","));
 	}
 	lines2.push("");
@@ -65,13 +69,13 @@ function m2b16(lines,outlist){
 	bas=lines2.join("\n");
 	return bas;
 }
-function m2b10(lines,outlist){
+function m2b10(lines,outlist,s,d){
 	var p,p0,p1;
 	var bas="",i,line,out,nln;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var lines2=[],linehex=[],lineadr=-1;
 
-	nln = 10;
+	nln = 0;
 	
 	for (i = 0; i < outlist.length; i++){
 		out=outlist[i];
@@ -99,25 +103,25 @@ function m2b10(lines,outlist){
 				i--;
 			}
 			
-			var ln = nln.toString(10) + " POKE#" + lineadr.toString(16).toUpperCase() + "," + linehex.join(",");
+			var ln = lno(s,d,nln) + "POKE#" + lineadr.toString(16).toUpperCase() + "," + linehex.join(",");
 			if (ln.length > 200 - 8 || flush) {
 //			if (linehex.length == 40) {
 				lines2.push(ln);
 				lineadr = -1;
 				linehex=[];
-				nln+=10;
+				nln++;
 			}
 		}
 	}
 	if (linehex.length > 0) {
-		lines2.push(nln.toString(10) + " POKE#" + lineadr.toString(16).toUpperCase() +","+linehex.join(","));
+		lines2.push(lno(s,d,nln) + "POKE#" + lineadr.toString(16).toUpperCase() +","+linehex.join(","));
 	}
 	lines2.push("");
 
 	bas=lines2.join("\n");
 	return bas;
 }
-function m2b2(lines, outlist){
+function m2b2(lines, outlist,s,d){
 	var bas = "";
 	var skips = { undefined: true, LABEL: true, COMMENT: true, NOTOPCODE:true };
 	for (var i = 0; i < outlist.length; i++) {
@@ -130,15 +134,13 @@ function m2b2(lines, outlist){
 		if (p==EMPTYLINE) {
 			continue;
 		} else if (p === undefined || p === null || p === false || p >= NOTOPCODE) {
-			var nln = i * 10 + 10;
-			bas += nln + "'" + line + "\n";
+			bas += lno(s,d,i).replace(/ $/, "") + "'" + line + "\n";
 		} else {
 			var p0 = p & 0x0ff;
 			var p1 = (p >> 8) & 0x0ff;
 			p0 = zero2(p0);
 			p1 = zero2(p1);
-			var nln = i * 10 + 10;
-			bas += nln + " POKE#" + a.toString(16).toUpperCase() + ",`" + p0 + ",`" + p1+" :'" + line + "\n";
+			bas += lno(s,d,i) + "POKE#" + a.toString(16).toUpperCase() + ",`" + p0 + ",`" + p1+" :'" + line + "\n";
 		}
 	}
 	return bas;
@@ -208,7 +210,7 @@ function m2ar2(lines,outlist){
 	}
 	return bas;
 }
-function m2ar16(lines,outlist) {
+function m2ar16(lines,outlist,s,d) {
 	var p,p0,p1;
 	var bas="",i,line,out;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
@@ -221,7 +223,7 @@ function m2ar16(lines,outlist) {
 	}
 	
 	var limit = 30;
-	var nln = 10;
+	var nln = 0;
 	for (var i = 0; i < outlist.length; i++) {
 		out=outlist[i];
 		l=out[0];
@@ -248,8 +250,8 @@ function m2ar16(lines,outlist) {
 					return "misalignment not supported in this format";
 				}
 				n = (lineaddr - minaddr) >> 1;
-				bas += nln + " LET[" + n + "]," + linehex.join(",") + "\n";
-				nln += 10;
+				bas += lno(s,d,nln) + "LET[" + n + "]," + linehex.join(",") + "\n";
+				nln++;
 				linehex = [];
 				lineaddr=-1;
 			}
@@ -260,7 +262,7 @@ function m2ar16(lines,outlist) {
 			return "misalignment not supported in this format";
 		}
 		n = (lineaddr - minaddr) >> 1;
-		bas += nln + " LET[" + n + "]," + linehex.join(",") + "\n";
+		bas += lno(s,d,nln) + "LET[" + n + "]," + linehex.join(",") + "\n";
 	}
 	return bas;
 }

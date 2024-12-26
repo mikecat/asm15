@@ -768,6 +768,9 @@ function assemble() {
 	dom_hex=document.getElementById("textarea2");
 	dom_err=document.getElementById("textarea3");
 	dom_adr=document.getElementById("txtadr");
+	dom_len=document.getElementById("uselineno");
+	dom_lst=document.getElementById("linenostart");
+	dom_lde=document.getElementById("linenodelta");
 	var fmt = dom_fmt.value;
 	var fm2b = fmt_dict[fmt];
 	var s = dom_src.value;
@@ -943,7 +946,9 @@ function assemble() {
 		}
 	}
 	//console.log(outlist);
-	bas = fm2b(lines, outlist);
+	var linenoStart = dom_len.checked ? pint(dom_lst.value) : NaN;
+	var linenoDelta = dom_len.checked ? pint(dom_lde.value) : NaN;
+	bas = fm2b(lines, outlist, linenoStart, linenoDelta);
 	dom_hex.value = bas;
 	binsize.textContent = getSize(lines, outlist);
 	if (dom_hex.textContent==bas)
