@@ -266,6 +266,57 @@ function m2ar16(lines,outlist,s,d) {
 	}
 	return bas;
 }
+function m2armin(lines,outlist,s,d) {
+	var p,p0,p1;
+	var bas="",i,line,out;
+	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
+	var n = 0;
+	var curline = "";
+	var curaddr = -1;
+	var minaddr = 0;
+	for (var i = 0; i < outlist.length; i++) {
+		if (i == 0 || outlist[i][1] < minaddr) minaddr = outlist[i][1];
+	}
+	
+	var limit = 30;
+	var nln = 0;
+	for (var i = 0; i < outlist.length; i++) {
+		out=outlist[i];
+		l=out[0];
+		a=out[1];
+		p=out[2];
+		line=lines[l];
+
+		if(p==EMPTYLINE) {
+			continue;
+		} else if(p===undefined||p===null||p===false||p>=NOTOPCODE){
+		} else {
+			if (curaddr<0) {
+				if ((a - minaddr) % 2 != 0) {
+					return "misalignment not supported in this format";
+				}
+				n = (a - minaddr) >> 1;
+				curline = lno(s,d,nln) + "LET[" + n + "]";
+				nln++;
+				curaddr = a;
+			}
+			var pval = p >= 0x8000 ? p - 0x10000 : p;
+			var pstr = pval <= -10000 ? "#" + (pval & 0xffff).toString(16).toUpperCase() : pval.toString(10);
+			if (curaddr==a && curline.length + 1 + pstr.length <= 200) {
+				curline += "," + pstr;
+				curaddr += 2;
+			} else {
+				bas += curline + "\n";
+				curaddr = -1;
+				i--;
+			}
+		}
+	}
+	if (curline.length > 0) {
+		bas += curline + "\n";
+	}
+	return bas;
+}
 // from http://tagiyasoft.blog.jp/asm15.js
 function m2js(lines,outlist){
 	var p,p0,p1;
@@ -534,5 +585,5 @@ function m2mot(lines, outlist) {
 }
 
 var fmt_dict = {
-	"bas2": m2b2, "bas16": m2b16, "bas10": m2b10, "basar2": m2ar2, "basar16": m2ar16, "bin": m2bin, "latte": m2js, "c": m2c, "hex": m2hex, "mot": m2mot
+	"bas2": m2b2, "bas16": m2b16, "bas10": m2b10, "basar2": m2ar2, "basar16": m2ar16, "basarmin": m2armin, "bin": m2bin, "latte": m2js, "c": m2c, "hex": m2hex, "mot": m2mot
 };
