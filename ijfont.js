@@ -1,3 +1,5 @@
+"use strict";
+
 /*
 以下のフォントセット2個は、
 CC BY ( https://creativecommons.org/licenses/by/4.0/ )に基づき、

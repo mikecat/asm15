@@ -1,3 +1,5 @@
+"use strict";
+
 function lno(start,delta,cnt) {
 	if (isNaN(start) || isNaN(delta)) return "";
 	return (start + delta * cnt).toString(10) + " ";
@@ -20,7 +22,7 @@ function zero2w(x){
 }
 function m2b16(lines,outlist,s,d){
 	var p,p0,p1;
-	var bas="",i,line,out,nln;
+	var bas="",i,line,out,l,a,nln;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var lines2=[],linehex=[],lineadr=-1;
 
@@ -71,7 +73,7 @@ function m2b16(lines,outlist,s,d){
 }
 function m2b10(lines,outlist,s,d){
 	var p,p0,p1;
-	var bas="",i,line,out,nln;
+	var bas="",i,line,out,l,a,nln;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var lines2=[],linehex=[],lineadr=-1;
 
@@ -147,7 +149,7 @@ function m2b2(lines, outlist,s,d){
 }
 function m2bin(lines,outlist){
 	var p,p0,p1;
-	var bas="",i,line,out,nln;
+	var bas="",i,line,out,l,a,nln;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var paddr=-1;
 	for(i=0; i<outlist.length; i++){
@@ -182,7 +184,7 @@ function m2bin(lines,outlist){
 }
 function m2ar2(lines,outlist){
 	var p,p0,p1;
-	var bas="",i,line,out,nln;
+	var bas="",i,line,out,l,a,nln;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var n = 0;
 	var minaddr = 0;
@@ -212,7 +214,7 @@ function m2ar2(lines,outlist){
 }
 function m2ar16(lines,outlist,s,d) {
 	var p,p0,p1;
-	var bas="",i,line,out;
+	var bas="",i,line,out,l,a;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var n = 0;
 	var linehex=[];
@@ -268,7 +270,7 @@ function m2ar16(lines,outlist,s,d) {
 }
 function m2armin(lines,outlist,s,d) {
 	var p,p0,p1;
-	var bas="",i,line,out;
+	var bas="",i,line,out,l,a;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var n = 0;
 	var curline = "";
@@ -320,7 +322,7 @@ function m2armin(lines,outlist,s,d) {
 // from http://tagiyasoft.blog.jp/asm15.js
 function m2js(lines,outlist){
 	var p,p0,p1;
-	var bas="",i,line,out;
+	var bas="",i,line,out,l,a;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var lines2=[],linehex=[],lineadr=-1;
 	var minaddr = 0;
@@ -390,7 +392,7 @@ function m2js(lines,outlist){
 // for C lang
 function m2c(lines,outlist){
 	var p,p0,p1;
-	var bas="",i,line,out;
+	var bas="",i,line,out,l,a;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var lines2=[],linehex=[],lineadr=-1;
 	var minaddr = 0;
@@ -448,7 +450,7 @@ function m2c(lines,outlist){
 // for hex file
 function m2hex(lines,outlist){
 	var p,p0,p1;
-	var bas="",i,line,out;
+	var bas="",i,line,out,l,a;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var lines2=[],linehex=[],lineadr=-1,highadr=0;
 	
@@ -517,7 +519,7 @@ function m2hex(lines,outlist){
 // for mot file
 function m2mot(lines, outlist) {
 	var p,p0,p1;
-	var bas="",i,line,out;
+	var bas="",i,line,out,l,a;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var lines2=[],linehex=[],lineadr=-1;
 	var startadr = -1;

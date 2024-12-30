@@ -1,3 +1,5 @@
+"use strict";
+
 //GLOBAL
 var NOTOPCODE = 0x100000000 + 0;
 var YET       = 0x100000000 + 1;
@@ -630,7 +632,7 @@ var cmdlist, patlist;
 //
 function getSize(lines, outlist){
 	var p,p0,p1;
-	var bas="",i,line,out,nln;
+	var bas="",i,line,out,nln,l,a;
 	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	var n = 0;
 	for (var i = 0; i < outlist.length; i++) {
@@ -763,14 +765,14 @@ function assemble() {
 	var curlist = lists["m0"];
 	cmdlist = curlist.cmdlist;
 	patlist = curlist.patlist;
-	dom_src=document.getElementById("textarea1");
-	dom_fmt=document.getElementById("selfmt");
-	dom_hex=document.getElementById("textarea2");
-	dom_err=document.getElementById("textarea3");
-	dom_adr=document.getElementById("txtadr");
-	dom_len=document.getElementById("uselineno");
-	dom_lst=document.getElementById("linenostart");
-	dom_lde=document.getElementById("linenodelta");
+	var dom_src=document.getElementById("textarea1");
+	var dom_fmt=document.getElementById("selfmt");
+	var dom_hex=document.getElementById("textarea2");
+	var dom_err=document.getElementById("textarea3");
+	var dom_adr=document.getElementById("txtadr");
+	var dom_len=document.getElementById("uselineno");
+	var dom_lst=document.getElementById("linenostart");
+	var dom_lde=document.getElementById("linenodelta");
 	var fmt = dom_fmt.value;
 	var fm2b = fmt_dict[fmt];
 	var s = dom_src.value;

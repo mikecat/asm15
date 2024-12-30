@@ -1,3 +1,5 @@
+"use strict";
+
 function parseBasInt(s) {
 	if (s.substr(0, 1) === "#") return parseInt(s.substr(1), 16);
 	else if (s.substr(0, 1) === "`") return parseInt(s.substr(1), 2);
