@@ -1,18 +1,18 @@
 "use strict";
 
 //GLOBAL
-var NOTOPCODE = 0x100000000 + 0;
-var YET       = 0x100000000 + 1;
-var COMMENT   = 0x100000000 + 2;
-var EMPTYLINE = 0x100000000 + 3;
-var ASMERR    = 0x100000000 + 4;
-var LABEL     = 0x100000000 + 5;
-var DIRECTIVE = 0x100000000 + 6;
+const NOTOPCODE = 0x100000000 + 0;
+const YET       = 0x100000000 + 1;
+const COMMENT   = 0x100000000 + 2;
+const EMPTYLINE = 0x100000000 + 3;
+const ASMERR    = 0x100000000 + 4;
+const LABEL     = 0x100000000 + 5;
+const DIRECTIVE = 0x100000000 + 6;
 
-var lbl_dict = {};
-// var lbl_align4 = [];
+let lbl_dict = {};
+// let lbl_align4 = [];
 
-var token_dict = {
+const token_dict = {
 "rlist":"\\{(.+)\\}",
 "label":"(@.+)",
 "h":"r(8|9|10|11|12|13|14|15)",
@@ -122,20 +122,20 @@ var token_dict = {
 
 function patfactory(s) {
 	s = s.split(" ");
-	var p = [ "^" ];
-	for (var i = 0; i < s.length; i++) {
+	const p = [ "^" ];
+	for (let i = 0; i < s.length; i++) {
 		p.push(token_dict[s[i].toLowerCase()]);
 	}
 	p.push("$");
-	var s = p.join("");
+	s = p.join("");
 	return RegExp(s);
 }
-var b_dict={};
-var n_dict={};
+const b_dict={};
+const n_dict={};
 function rlist(){
-	var pat=/r([0-7])\-r([0-7])/;
-	var f=function(d,pc){
-		var ret=0,r,i,j,a,rs=d.split(",");
+	const pat=/r([0-7])\-r([0-7])/;
+	const f=function(d,pc){
+		let ret=0,r,i,j,a,rs=d.split(",");
 		for(i=0;i<rs.length;i++){
 			r=rs[i];
 			a=r.match(pat)
@@ -164,19 +164,19 @@ function n(bits, s, ofs, div, align4) {
 	//dat bit shift
 	ofs=(ofs!=undefined)?ofs:0;
 	div=(div!=undefined)?div:0;
-	var mask=Math.pow(2,bits)-1;
-	var mx=Math.pow(2,bits-1)-1;
-	var mn=-Math.pow(2,bits-1);
+	let mask=Math.pow(2,bits)-1;
+	const mx=Math.pow(2,bits-1)-1;
+	const mn=-Math.pow(2,bits-1);
 	if (mask < 1)
 		mask = 0;
-	var f = function(d, pc){
-		var ret = d.match(/@\w+/g);
+	const f = function(d, pc){
+		const ret = d.match(/@\w+/g);
 		if (ret != null) {
-			for (var i = 0; i < ret.length; i++) {
-				var lbl = ret[i];
+			for (let i = 0; i < ret.length; i++) {
+				const lbl = ret[i];
 				if (lbl in lbl_dict) {
-					var adl = lbl_dict[lbl];
-					var ad = adl - (pc & 0x0fffffffe);
+					const adl = lbl_dict[lbl];
+					let ad = adl - (pc & 0x0fffffffe);
 					if (align4 && ad < 0) {
 						throw new Error("can't use minus address");
 					}
@@ -189,7 +189,7 @@ function n(bits, s, ofs, div, align4) {
 							ad += 2;
 						}
 					}
-					var rel = ad >> div; // 0x0fffffffc -> 0x0fffffffe
+					const rel = ad >> div; // 0x0fffffffc -> 0x0fffffffe
 //					alert(lbl_dict[lbl].toString(16) + " " + pc.toString(16) + " " + div + " " + ((pc & 0x0fffffffe)) + " " + lbl + " " + rel);
 					if (rel > mx || rel < mn) {
 						throw new Error("too far");
@@ -206,9 +206,9 @@ function n(bits, s, ofs, div, align4) {
 	return f;
 }
 function na(bits, s, or1) {
-	var fn = n(bits, s, 0, false, false);
-	var f = function(d, pc) {
-		var ret = fn(d, 0);
+	const fn = n(bits, s, 0, false, false);
+	const f = function(d, pc) {
+		let ret = fn(d, 0);
 		if (ret == YET) return ret;
 		if (or1) ret |= 1 << s;
 		return ret;
@@ -218,11 +218,11 @@ function na(bits, s, or1) {
 function b(bits, s, ofs, chk) {
 	//dat bit shift,ofs
 	ofs = (ofs != undefined) ? ofs : 0;
-	var mask = Math.pow(2, bits) - 1;
+	let mask = Math.pow(2, bits) - 1;
 	if (mask < 1)
 		mask = 0;
 //console.log(bits,s,ofs);
-	var f = function(d, pc) {
+	const f = function(d, pc) {
 		//console.log(bits,s,ofs);
 		d = pint(d);
 		if (chk) {
@@ -238,13 +238,13 @@ function bu(bits, s, ofs) {
 	return b(bits, s, ofs, true);
 }
 function cond(ofs, invert) {
-	var f = function(d, pc) {
+	const f = function(d, pc) {
 		if (d == "hs") {
 			d = "cs";
 		} else if (d == "lo") {
 			d = "cc";
 		}
-		var n = "eq|ne|cs|cc|mi|pl|vs|vc|hi|ls|ge|lt|gt|le".indexOf(d) / 3;
+		let n = "eq|ne|cs|cc|mi|pl|vs|vc|hi|ls|ge|lt|gt|le".indexOf(d) / 3;
 		if (invert)
 			n ^= 1;
 		return n << ofs;
@@ -252,7 +252,7 @@ function cond(ofs, invert) {
 	return f;
 }
 function n6n18() {
-	var f = function(d, pc) {
+	const f = function(d, pc) {
 		d = pint(d);
 		if ((d & 0xffffffe0) == 0 || ((d >> 5) & 0x07ffffff) == 0x07ffffff) {
 			return ((d & 0x1f) << 2) | (((d >> 5) & 0x1) << 12);
@@ -266,13 +266,13 @@ function n6n18() {
 }
 function d(func, plist) {
 	// plist: array of [src_shift,dst_shift,bits]
-	var f = function(d, pc) {
-		var value = func(d, pc);
+	const f = function(d, pc) {
+		const value = func(d, pc);
 		if (value >= NOTOPCODE) {
 			return value;
 		}
-		var ret = 0;
-		for (var i = 0; i < plist.length; i++) {
+		let ret = 0;
+		for (let i = 0; i < plist.length; i++) {
 			if (plist[i][1] >= 0) {
 				ret |= ((value >> plist[i][0]) & ((1 << plist[i][2]) - 1)) << plist[i][1];
 			} else {
@@ -288,24 +288,24 @@ function d(func, plist) {
 function reg32_label() {
 	// reg32 = label
 	// auipc + addi
-	var nfunc = n(32, 0, 0, 0);
-	var bufunc = bu(5, 0);
-	var f = function(ar, pc) {
-		var target = nfunc(ar[2], pc);
+	const nfunc = n(32, 0, 0, 0);
+	const bufunc = bu(5, 0);
+	const f = function(ar, pc) {
+		let target = nfunc(ar[2], pc);
 		if (target >= NOTOPCODE) {
 			return [target, target, target, target];
 		}
 		if (target & 0x800) target += 0x1000;
-		var reg = bufunc(ar[1], pc);
-		var auipc = (target & 0xfffff000) | (reg << 7) | 0x17;
-		var addi = ((target & 0xfff) << 20) | (reg << 15) | (reg << 7) | 0x13;
+		const reg = bufunc(ar[1], pc);
+		const auipc = (target & 0xfffff000) | (reg << 7) | 0x17;
+		const addi = ((target & 0xfff) << 20) | (reg << 15) | (reg << 7) | 0x13;
 		return [auipc & 0xffff, (auipc >> 16) & 0xffff, addi & 0xffff, (addi >> 16) & 0xffff];
 	};
 	return f;
 }
 function sreg(s) {
-	var f = function(d, pc) {
-		var value = 0;
+	const f = function(d, pc) {
+		let value = 0;
 		if (d == "apsr") value = 0;
 		else if (d == "iapsr") value = 1;
 		else if (d == "eapsr") value = 2;
@@ -322,12 +322,12 @@ function sreg(s) {
 	return f;
 }
 function build_m(f, ar, pc) {
-	var op = f[1];
+	let op = f[1];
 	if ((typeof op) == "number") {
 		// number : 16-bit instruction
-		for (var i = 1; i < ar.length; i++) {
+		for (let i = 1; i < ar.length; i++) {
 			//console.log(i + " " + ar[i]);
-			var _op = f[i + 1](ar[i], pc);
+			const _op = f[i + 1](ar[i], pc);
 			if (_op >= NOTOPCODE) {
 				return _op;
 			} else {
@@ -341,9 +341,9 @@ function build_m(f, ar, pc) {
 	} else {
 		// array : 32-bit instruction
 		op = op[0];
-		for (var i = 1; i < ar.length; i++) {
+		for (let i = 1; i < ar.length; i++) {
 			//console.log(i + " " + ar[i]);
-			var _op = f[i + 1](ar[i], pc);
+			const _op = f[i + 1](ar[i], pc);
 			if (_op >= NOTOPCODE) {
 				return [_op, _op];
 			} else {
@@ -354,7 +354,7 @@ function build_m(f, ar, pc) {
 	}
 }
 
-var cmdlist_m0 = [
+const cmdlist_m0 = [
 //special
 ["reg = rev ( reg )",0xba00,b(3,0),b(3,3)],
 ["reg = rev16 ( reg )",0xba40,b(3,0),b(3,3)],
@@ -500,7 +500,7 @@ var cmdlist_m0 = [
 ["daddrl n",[0],na(32,0)],
 ];
 
-var cmdlist_rv32c = [
+const cmdlist_rv32c = [
 ["reg32 + = n",0x0001,b(5,7),d(b(6,0),[[0,2,5],[5,12,1]])],
 ["reg32 << = n",0x0002,b(5,7),bu(5,2)],
 ["reg32 + = reg32",0x9002,b(5,7),b(5,2)],
@@ -618,24 +618,24 @@ var cmdlist_rv32c = [
 ["daddrl n",[0],na(32,0)],
 ];
 
-var patlist_m0 = [];
-var patlist_rv32c = [];
-for (var i = 0; i < cmdlist_m0.length; i++){
+const patlist_m0 = [];
+const patlist_rv32c = [];
+for (let i = 0; i < cmdlist_m0.length; i++){
 	patlist_m0.push(patfactory(cmdlist_m0[i][0]));
 }
-for (var i = 0; i < cmdlist_rv32c.length; i++){
+for (let i = 0; i < cmdlist_rv32c.length; i++){
 	patlist_rv32c.push(patfactory(cmdlist_rv32c[i][0]));
 }
 
-var cmdlist, patlist;
+let cmdlist, patlist;
 
 //
 function getSize(lines, outlist){
-	var p,p0,p1;
-	var bas="",i,line,out,nln,l,a;
-	var skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
-	var n = 0;
-	for (var i = 0; i < outlist.length; i++) {
+	let p,p0,p1;
+	let bas="",i,line,out,nln,l,a;
+	const skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
+	let n = 0;
+	for (let i = 0; i < outlist.length; i++) {
 		out=outlist[i];
 		l=out[0];
 		a=out[1];
@@ -655,7 +655,7 @@ function getSize(lines, outlist){
 }
 
 function cutComment(s) {
-	var n = s.indexOf("'");
+	const n = s.indexOf("'");
 	if (n < 0)
 		return s;
 	return s.substring(0, n);
@@ -664,15 +664,15 @@ function cutComment(s) {
 function asmln(ln, prgctr) {
 	// 命令 > 命令でない値 > 例外 の順で優先
 	// それぞれ最初に出てきたものを採用
-	var exc = null, result = undefined;
+	let exc = null, result = undefined;
 	ln = cutComment(ln);
 	//ln=ln.toLowerCase().replace(/\s/g,"");
-	for (var j = 0; j < patlist.length; j++) {
-		var m = ln.match(patlist[j]);
+	for (let j = 0; j < patlist.length; j++) {
+		const m = ln.match(patlist[j]);
 		if (m) {
 			// console.log(patlist[j] + " " + m);
 			try {
-				var p = build_m(cmdlist[j], m, prgctr);
+				const p = build_m(cmdlist[j], m, prgctr);
 				if ((p.length + 1 ? p[0] : p) >= NOTOPCODE) {
 					if (result == undefined) result = p;
 				} else {
@@ -689,8 +689,8 @@ function asmln(ln, prgctr) {
 }
 function pint(s) {
 //	try {
-		var orgs = s;
-		var n = s.indexOf("'");
+		const orgs = s;
+		const n = s.indexOf("'");
 		if (n >= 0) {
 			s = s.substring(0, n);
 		}
@@ -703,8 +703,8 @@ function pint(s) {
 }
 
 function pdat(ln,pc,align){
-	var dtype=ln.charAt(4),start;
-	var sz,sz_dict={"b":1,"w":2,"l":4};
+	let dtype=ln.charAt(4),start;
+	let sz,sz_dict={"b":1,"w":2,"l":4};
 	if (dtype in sz_dict){
 		sz=sz_dict[dtype];
 		start=5;
@@ -714,16 +714,16 @@ function pdat(ln,pc,align){
 	}
 	
 	ln=ln.replace(/#/g,"0x").replace(/`/g,"0b")
-	var dlist=ln.slice(start).split(",")
-	var i,d,ret=[];
-	var adr=0;
-	var msk=Math.pow(2,8*sz)-1;
+	const dlist=ln.slice(start).split(",")
+	let i,d,ret=[];
+	let adr=0;
+	const msk=Math.pow(2,8*sz)-1;
 	for(i=0;i<dlist.length;i++){
 		d=pint(dlist[i]);
 		ret.push(d&msk);
 	}
 				
-	var _ret = ret;
+	const _ret = ret;
 	ret = [];
 
 	//align
@@ -751,47 +751,47 @@ function pdat(ln,pc,align){
 
 }
 
-var bas = "";
-var outlist = [];
+let bas = "";
+let outlist = [];
 function assemble() {
 	lbl_dict = {};
 	//lbl_align4 = [];
 	outlist = [];
-	var prgctr = 0;
-	var lists = {
+	let prgctr = 0;
+	const lists = {
 		"m0": {"cmdlist": cmdlist_m0, "patlist": patlist_m0},
 		"rv32c": {"cmdlist": cmdlist_rv32c, "patlist": patlist_rv32c}
 	};
-	var curlist = lists["m0"];
+	let curlist = lists["m0"];
 	cmdlist = curlist.cmdlist;
 	patlist = curlist.patlist;
-	var dom_src=document.getElementById("textarea1");
-	var dom_fmt=document.getElementById("selfmt");
-	var dom_hex=document.getElementById("textarea2");
-	var dom_err=document.getElementById("textarea3");
-	var dom_adr=document.getElementById("txtadr");
-	var dom_len=document.getElementById("uselineno");
-	var dom_lst=document.getElementById("linenostart");
-	var dom_lde=document.getElementById("linenodelta");
-	var fmt = dom_fmt.value;
-	var fm2b = fmt_dict[fmt];
-	var s = dom_src.value;
+	const dom_src=document.getElementById("textarea1");
+	const dom_fmt=document.getElementById("selfmt");
+	const dom_hex=document.getElementById("textarea2");
+	const dom_err=document.getElementById("textarea3");
+	const dom_adr=document.getElementById("txtadr");
+	const dom_len=document.getElementById("uselineno");
+	const dom_lst=document.getElementById("linenostart");
+	const dom_lde=document.getElementById("linenodelta");
+	const fmt = dom_fmt.value;
+	const fm2b = fmt_dict[fmt];
+	let s = dom_src.value;
 	s = s.replace(/\/\*([^*]|\*[^\/])*\*\//g,"");
-	var lines = s.split("\n");
-	var j,line,m,p,p1,p2;
-	var lno;
+	const lines = s.split("\n");
+	let j,line,m,p,p1,p2;
+	let lno;
 	dom_hex.innerHTML=""
 	prgctr=pint(dom_adr.value);
-	var startadr = prgctr;
+	const startadr = prgctr;
 	bas="";
 
-	var orglines = [];
-	for (var i = 0; i < lines.length; i++) {
+	const orglines = [];
+	for (let i = 0; i < lines.length; i++) {
 		orglines.push(lines[i]);
 	}
 	
-	var pats = [];
-	for (var i = 0; i < lines.length; i++) {
+	const pats = [];
+	for (let i = 0; i < lines.length; i++) {
 		pats.push(curlist);
 		line = lines[i].toLowerCase().replace(/\s/g,"");
 		lines[i] = line;
@@ -814,12 +814,12 @@ function assemble() {
 				outlist.push([i,prgctr,COMMENT]);
 				continue;
 			} else if (line.slice(0,4) == "data" || line.slice(0,5) == "udata") {
-				var align = line.charAt(0) != "u";
-				var line2 = align ? line : line.substr(1);
+				const align = line.charAt(0) != "u";
+				const line2 = align ? line : line.substr(1);
 				if (align && prgctr % 2 == 1) {
 					prgctr++;
 				}
-				var dlist = pdat(line2, prgctr, align);
+				const dlist = pdat(line2, prgctr, align);
 				for (j = 0; j < dlist.length; j++){
 					outlist.push([i, prgctr, dlist[j]]);
 					prgctr += 2;
@@ -827,7 +827,7 @@ function assemble() {
 				continue;
 			} else if (line.slice(0,4) == "mode") {
 				outlist.push([i,prgctr,DIRECTIVE]);
-				var mode = cutComment(line.substr(4));
+				const mode = cutComment(line.substr(4));
 				if (mode in lists) {
 					curlist = lists[mode];
 					cmdlist = curlist.cmdlist;
@@ -837,18 +837,18 @@ function assemble() {
 				}
 				continue;
 			} else if (line.slice(0,3) == "org") {
-				var is_r = line.substr(3,1) == "r";
+				const is_r = line.substr(3,1) == "r";
 				outlist.push([i,prgctr,DIRECTIVE]);
-				var new_prgctr = (is_r ? startadr : 0) + pint(cutComment(line.substr(is_r ? 4 : 3)));
+				const new_prgctr = (is_r ? startadr : 0) + pint(cutComment(line.substr(is_r ? 4 : 3)));
 				prgctr = new_prgctr;
 				continue;
 			} else if (line.slice(0,5) == "align") {
-				var is_r = line.substr(5,1) == "r";
-				var parts = cutComment(line.substr(is_r ? 6 : 5)).split(/,/);
-				var a = pint(parts[0]);
-				var b = parts.length >= 2 ? pint(parts[1]) : 0;
-				var c = parts.length >= 3 ? pint(parts[2]) : null;
-				var new_prgctr = prgctr, r = (is_r ? prgctr - startadr : prgctr) % a;
+				const is_r = line.substr(5,1) == "r";
+				const parts = cutComment(line.substr(is_r ? 6 : 5)).split(/,/);
+				const a = pint(parts[0]);
+				const b = parts.length >= 2 ? pint(parts[1]) : 0;
+				const c = parts.length >= 3 ? pint(parts[2]) : null;
+				let new_prgctr = prgctr, r = (is_r ? prgctr - startadr : prgctr) % a;
 				if (r < 0) r += a;
 				if (a <= 0 || b < 0) {
 					throw new Error("invalid parameter");
@@ -870,10 +870,10 @@ function assemble() {
 				}
 				continue;
 			} else if (line.slice(0,5) == "space") {
-				var parts = cutComment(line.substr(5)).split(/,/);
-				var a = pint(parts[0]);
-				var b = parts.length >= 2 ? pint(parts[1]) : null;
-				var new_prgctr = prgctr + a;
+				const parts = cutComment(line.substr(5)).split(/,/);
+				const a = pint(parts[0]);
+				const b = parts.length >= 2 ? pint(parts[1]) : null;
+				const new_prgctr = prgctr + a;
 				if (b == null || prgctr + 2 > new_prgctr) {
 					outlist.push([i,prgctr,DIRECTIVE]);
 					prgctr = new_prgctr;
@@ -894,7 +894,7 @@ function assemble() {
 				if (p != undefined) {
 					if (p.length + 1) {
 						// array is returned
-						for (var j = 0; j < p.length; j++) {
+						for (let j = 0; j < p.length; j++) {
 							outlist.push([ i, prgctr, p[j] ]);
 							prgctr += 2;
 						}
@@ -911,7 +911,7 @@ function assemble() {
 		}
 	}
 	
-	for (i = 0; i < outlist.length; i++){
+	for (let i = 0; i < outlist.length; i++){
 		lno = outlist[i][0];
 		prgctr = outlist[i][1];
 		p = outlist[i][2];
@@ -927,7 +927,7 @@ function assemble() {
 				p = asmln(line,prgctr);
 				if (p != undefined && p.length + 1) {
 					// multiple-word instruction
-					for (var j = 0; j < p.length; j++) {
+					for (let j = 0; j < p.length; j++) {
 						outlist[i+j] = [ lno, prgctr+2*j, p[j] ];
 						
 						if (outlist[i+j][2] == YET) {
@@ -948,8 +948,8 @@ function assemble() {
 		}
 	}
 	//console.log(outlist);
-	var linenoStart = dom_len.checked ? pint(dom_lst.value) : NaN;
-	var linenoDelta = dom_len.checked ? pint(dom_lde.value) : NaN;
+	const linenoStart = dom_len.checked ? pint(dom_lst.value) : NaN;
+	const linenoDelta = dom_len.checked ? pint(dom_lde.value) : NaN;
 	bas = fm2b(lines, outlist, linenoStart, linenoDelta);
 	dom_hex.value = bas;
 	binsize.textContent = getSize(lines, outlist);
@@ -967,9 +967,9 @@ function assemble() {
 }
 
 function example() {
-	var dom_src = document.getElementById("textarea1");
-	var dom_ex = document.getElementById("selex");
-	var exname = dom_ex.value;
+	const dom_src = document.getElementById("textarea1");
+	const dom_ex = document.getElementById("selex");
+	const exname = dom_ex.value;
 	if (!exname) {
 		return false;
 	}

@@ -1,7 +1,7 @@
 "use strict";
 
 window.onload = function() {
-	var conds = ["0", "!0", "CS", "CC", "MI", "PL", "VS", "VC", "HI", "LS", "GE", "LT", "GT", "LE"];
+	const conds = ["0", "!0", "CS", "CC", "MI", "PL", "VS", "VC", "HI", "LS", "GE", "LT", "GT", "LE"];
 
 	// 上から試して、一番最初にマッチしたものを採用する
 	// マッチするものがなければ、DATAWを出力する
@@ -33,7 +33,7 @@ window.onload = function() {
 	//   format     : 数の出力方法
 	//                u : 10進符号なし
 	//                d : 10進符号あり
-	var convertList = [
+	const convertList = [
 		["00100", "R%8,3u = %0,8u"],
 		["010001100", "R%0,3u = R%3,4u"], 
 		["010001101", "R%0,3,8u = R%3,4u"],
@@ -82,11 +82,11 @@ window.onload = function() {
 		["0100001000", "R%0,3u & R%3,3u"],
 
 		["1101", function(mCode1, mCode2) { // IF cond GOTO n8
-			var cond = (mCode1 >> 8) & 0xf;
+			const cond = (mCode1 >> 8) & 0xf;
 			if (cond >= conds.length) {
 				return {"inst": null, "deltaInst": 0};
 			}
-			var offset = (mCode1 + 2) & 0xff;
+			let offset = (mCode1 + 2) & 0xff;
 			if (offset & 0x80) offset -= 0x100;
 			return {"inst": "IF " + conds[cond] + " GOTO $" + offset + ",1$", "deltaInst": 1};
 		}],
@@ -95,44 +95,44 @@ window.onload = function() {
 			if ((mCode1 & 7) !== 0) {
 				return {"inst": null, "deltaInst": 0};
 			}
-			var reg = (mCode1 >> 3) & 0xf;
+			const reg = (mCode1 >> 3) & 0xf;
 			return {"inst": (reg === 14 ? "RET" : "GOTO R" + reg), "deltaInst": 1};
 		}],
 		["010001111", function(mCode1, mCode2) { // GOSUB Rm
 			if ((mCode1 & 7) !== 0) {
 				return {"inst": null, "deltaInst": 0};
 			}
-			var reg = (mCode1 >> 3) & 0xf;
+			const reg = (mCode1 >> 3) & 0xf;
 			return {"inst": "GOSUB R" + reg, "deltaInst": 1};
 		}],
 		["11110", function(mCode1, mCode2) { // GOSUB n22
 			if (((mCode2 >> 11) & 0x1f) !== 0x1f) {
 				return {"inst": null, "deltaInst": 0};
 			}
-			var offset = (((mCode2 & 0x7ff) | ((mCode1 & 0x7ff) << 11)) + 2) & 0x3fffff;
+			let offset = (((mCode2 & 0x7ff) | ((mCode1 & 0x7ff) << 11)) + 2) & 0x3fffff;
 			if (offset & 0x200000) offset -= 0x400000;
 			return {"inst": "GOSUB $" + offset + ",1,gosub$", "deltaInst": 2};
 		}],
 
 		["1011010", function(mCode1, mCode2) { // PUSH
-			var regs = mCode1 & 0x1ff;
+			const regs = mCode1 & 0x1ff;
 			if (regs === 0) {
 				return {"inst": null, "deltaInst": 0};
 			}
-			var regsStr = "";
-			for (var i = 0; i <= 7; i++) {
+			let regsStr = "";
+			for (let i = 0; i <= 7; i++) {
 				if ((regs >> i) & 1) regsStr += ",R" + i;
 			}
 			if (regs & 0x100) regsStr += ",LR";
 			return {"inst": "PUSH {" + regsStr.substr(1) + "}", "deltaInst": 1};
 		}],
 		["1011110", function(mCode1, mCode2) { // POP
-			var regs = mCode1 & 0x1ff;
+			const regs = mCode1 & 0x1ff;
 			if (regs === 0) {
 				return {"inst": null, "deltaInst": 0};
 			}
-			var regsStr = "";
-			for (var i = 0; i <= 7; i++) {
+			let regsStr = "";
+			for (let i = 0; i <= 7; i++) {
 				if ((regs >> i) & 1) regsStr += ",R" + i;
 			}
 			if (regs & 0x100) regsStr += ",PC";
@@ -155,23 +155,23 @@ window.onload = function() {
 		["0100000110", "SBC R%0,3u, R%3,3u"],
 
 		["11001", function(mCode1, mCode2) { // LDM
-			var regs = mCode1 & 0xff;
+			const regs = mCode1 & 0xff;
 			if (regs === 0) {
 				return {"inst": null, "deltaInst": 0};
 			}
-			var regsStr = "";
-			for (var i = 0; i <= 7; i++) {
+			let regsStr = "";
+			for (let i = 0; i <= 7; i++) {
 				if ((regs >> i) & 1) regsStr += ",R" + i;
 			}
 			return {"inst": "LDM R" + ((mCode1 >> 8) & 7) + ", {" + regsStr.substr(1) + "}", "deltaInst": 1};
 		}],
 		["11000", function(mCode1, mCode2) { // STM
-			var regs = mCode1 & 0xff;
+			const regs = mCode1 & 0xff;
 			if (regs === 0) {
 				return {"inst": null, "deltaInst": 0};
 			}
-			var regsStr = "";
-			for (var i = 0; i <= 7; i++) {
+			let regsStr = "";
+			for (let i = 0; i <= 7; i++) {
 				if ((regs >> i) & 1) regsStr += ",R" + i;
 			}
 			return {"inst": "STM R" + ((mCode1 >> 8) & 7) + ", {" + regsStr.substr(1) + "}", "deltaInst": 1};
@@ -193,17 +193,17 @@ window.onload = function() {
 	];
 
 	function valueToString(value, radix = 10, digit = 0) {
-		var result = value.toString(radix).toUpperCase();
+		let result = value.toString(radix).toUpperCase();
 		while (result.length < digit) result = "0" + result;
 		return result;
 	}
 
 	document.getElementById("disasmbutton").onclick = function() {
 		// マシン語列を取得する
-		var memWrites = readMachineCode(document.getElementById("mcode").value);
+		const memWrites = readMachineCode(document.getElementById("mcode").value);
 		// アドレスの昇順にソートする
 		// 安定させる用に順番を追加する
-		for (var i = 0; i < memWrites.length; i++) memWrites[i].unshift(i);
+		for (let i = 0; i < memWrites.length; i++) memWrites[i].unshift(i);
 		memWrites.sort(function(a, b) {
 			if (a[1] !== b[1]) {
 				return a[1] > b[1] ? 1 : (a[1] < b[1] ? -1 : 0);
@@ -212,19 +212,19 @@ window.onload = function() {
 			}
 		});
 		// 安定させる用の順番を取る
-		for (var i = 0; i < memWrites.length; i++) memWrites[i].shift();
+		for (let i = 0; i < memWrites.length; i++) memWrites[i].shift();
 		// アドレスが重複しているとき、最後以外を削除する
-		for (var i = 1; i < memWrites.length; i++) {
+		for (let i = 1; i < memWrites.length; i++) {
 			if (memWrites[i - 1][0] === memWrites[i][0]) {
 				memWrites.splice(--i, 1);
 			}
 		}
 		// バイト列からワード列に変換する
-		var machineCodes = [];
+		const machineCodes = [];
 		if (memWrites.length > 0) {
-			var addr = memWrites[0][0];
+			let addr = memWrites[0][0];
 			addr -= addr & 3; // 4バイトアライメントにする
-			for (var i = 0; i < memWrites.length;) {
+			for (let i = 0; i < memWrites.length;) {
 				if (memWrites[i][0] === addr) {
 					if (i + 1 < memWrites.length && memWrites[i + 1][0] === addr + 1) {
 						machineCodes.push(memWrites[i][1] | (memWrites[i + 1][1] << 8));
@@ -246,50 +246,50 @@ window.onload = function() {
 		}
 
 		// ワード列をasm15に変換する
-		var result = [];
-		for (var i = 0; i < machineCodes.length;) {
-			var asmInst = null;
-			var deltaInst = 0;
-			var machineInst = valueToString(machineCodes[i], 2, 16);
+		const result = [];
+		for (let i = 0; i < machineCodes.length;) {
+			let asmInst = null;
+			let deltaInst = 0;
+			const machineInst = valueToString(machineCodes[i], 2, 16);
 			// 該当する命令を探す
-			for (var j = 0; j < convertList.length; j++) {
-				var puttern = convertList[j][0];
+			for (let j = 0; j < convertList.length; j++) {
+				const puttern = convertList[j][0];
 				if (machineInst.substr(0, puttern.length) === puttern) {
-					var conversion = convertList[j][1];
+					const conversion = convertList[j][1];
 					if (typeof(conversion) === "function") {
-						var mCode2 = (i + 1 < machineCodes.length ? machineCodes[i + 1] : 0);
-						var res = conversion(machineCodes[i], mCode2);
+						const mCode2 = (i + 1 < machineCodes.length ? machineCodes[i + 1] : 0);
+						const res = conversion(machineCodes[i], mCode2);
 						if (res.inst !== null) {
 							asmInst = res.inst;
 							deltaInst = res.deltaInst;
 						}
 					} else {
 						asmInst = "";
-						var pLeft = "" + conversion;
+						let pLeft = "" + conversion;
 						for (;;) {
-							var next = pLeft.indexOf("%");
+							const next = pLeft.indexOf("%");
 							if (next < 0) {
 								asmInst += pLeft;
 								break;
 							} else {
 								asmInst += pLeft.substr(0, next);
 								pLeft = pLeft.substr(next + 1);
-								var formatEnd = pLeft.search(/[ud]/);
+								const formatEnd = pLeft.search(/[ud]/);
 								if (formatEnd < 0) {
 									asmInst += "%" + pLeft;
 									break;
 								} else {
-									var formatStr = pLeft.substr(0, formatEnd + 1);
-									var formatData = pLeft.substr(0, formatEnd).split(/,/);
-									var formatKind = pLeft.charAt(formatEnd);
+									const formatStr = pLeft.substr(0, formatEnd + 1);
+									const formatData = pLeft.substr(0, formatEnd).split(/,/);
+									const formatKind = pLeft.charAt(formatEnd);
 									pLeft = pLeft.substr(formatEnd + 1);
-									var startBit = formatData.length > 0 ? parseInt(formatData[0]) : 0;
-									var bitLength = formatData.length > 1 ? parseInt(formatData[1]) : 0;
-									var offset = formatData.length > 2 ? parseInt(formatData[2]) : 0;
+									const startBit = formatData.length > 0 ? parseInt(formatData[0]) : 0;
+									const bitLength = formatData.length > 1 ? parseInt(formatData[1]) : 0;
+									const offset = formatData.length > 2 ? parseInt(formatData[2]) : 0;
 									console.log(formatData);
 									console.log(offset);
 									if (formatKind === "u" || formatKind === "d") {
-										var value = ((machineCodes[i] >> startBit) & ((1 << bitLength) - 1));
+										let value = ((machineCodes[i] >> startBit) & ((1 << bitLength) - 1));
 										if (formatKind === "d" && (value >> (bitLength - 1)) !== 0) {
 											value = value - (1 << bitLength);
 										}
@@ -320,35 +320,35 @@ window.onload = function() {
 		}
 
 		// ラベルの処理を行う
-		var definedLabels = {};
-		var usedLabels = {};
+		const definedLabels = {};
+		const usedLabels = {};
 		// 定義可能なラベルを登録する
-		for (var i = 0; i < result.length; i++) {
+		for (let i = 0; i < result.length; i++) {
 			definedLabels[result[i][0]] = true;
 		}
 		// 置き換えられるオフセットをラベルに書き換え、使われているラベルを記録する
-		for (var i = 0; i < result.length; i++) {
-			var leftSegment = result[i][1];
-			var processResult = "";
+		for (let i = 0; i < result.length; i++) {
+			let leftSegment = result[i][1];
+			let processResult = "";
 			for (;;) {
-				var idx = leftSegment.indexOf("$");
+				const idx = leftSegment.indexOf("$");
 				if (idx < 0) {
 					processResult += leftSegment;
 					break;
 				} else {
 					processResult += leftSegment.substr(0, idx);
 					leftSegment = leftSegment.substr(idx + 1);
-					var idx2 = leftSegment.indexOf("$");
+					const idx2 = leftSegment.indexOf("$");
 					if (idx2 < 0) {
 						processResult += "$" + leftSegment;
 						break;
 					} else {
-						var data = leftSegment.substr(0, idx2).split(",");
+						const data = leftSegment.substr(0, idx2).split(",");
 						leftSegment = leftSegment.substr(idx2 + 1);
-						var offset = data.length > 0 ? parseInt(data[0]) : 0;
-						var multiplier = data.length > 1 ? parseInt(data[1]) : 1;
-						var mode = data.length > 2 ? data[2] : "goto";
-						var targetAddress =
+						const offset = data.length > 0 ? parseInt(data[0]) : 0;
+						const multiplier = data.length > 1 ? parseInt(data[1]) : 1;
+						const mode = data.length > 2 ? data[2] : "goto";
+						const targetAddress =
 							(result[i][0] & ~((1 << (multiplier - 1)) - 1)) +
 							multiplier * offset;
 						if (targetAddress in definedLabels) {
@@ -371,8 +371,8 @@ window.onload = function() {
 			result[i][1] = processResult;
 		}
 		// 使われているラベルを出力しつつ、コードを書き出す
-		var resultStr = "";
-		for (var i = 0; i < result.length; i++) {
+		let resultStr = "";
+		for (let i = 0; i < result.length; i++) {
 			if (result[i][0] in usedLabels) {
 				resultStr += "@L" + valueToString(result[i][0] * 2 + 0x700, 16) + "\n";
 			}
