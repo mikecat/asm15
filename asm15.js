@@ -76,7 +76,7 @@ const token_dict = {
 "dsb":"dsb",
 "isb":"isb",
 "sreg":"(apsr|ipsr|epsr|iepsr|iapsr|eapsr|psr|xpsr|msp|psp|primask|control)",
-",":"\,",
+",":",",
 
 "bic":"bic",
 "asr":"asr",
@@ -130,10 +130,9 @@ function patfactory(s) {
 	s = p.join("");
 	return RegExp(s);
 }
-const b_dict={};
-const n_dict={};
+
 function rlist(){
-	const pat=/r([0-7])\-r([0-7])/;
+	const pat=/r([0-7])-r([0-7])/;
 	const f=function(d,pc){
 		let ret=0,r,i,j,a,rs=d.split(",");
 		for(i=0;i<rs.length;i++){
@@ -631,16 +630,13 @@ let cmdlist, patlist;
 
 //
 function getSize(lines, outlist){
-	let p,p0,p1;
-	let bas="",i,line,out,nln,l,a;
-	const skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
 	let n = 0;
 	for (let i = 0; i < outlist.length; i++) {
-		out=outlist[i];
-		l=out[0];
-		a=out[1];
-		p=out[2];
-		line=lines[l];
+		const out=outlist[i];
+		const l=out[0];
+		const a=out[1];
+		const p=out[2];
+		const line=lines[l];
 
 		if(p==EMPTYLINE){
 			continue;
@@ -689,7 +685,6 @@ function asmln(ln, prgctr) {
 }
 function pint(s) {
 //	try {
-		const orgs = s;
 		const n = s.indexOf("'");
 		if (n >= 0) {
 			s = s.substring(0, n);
@@ -697,7 +692,7 @@ function pint(s) {
 		s = s.replace(/#/g,"0x").replace(/`/g,"0b")
 		return parseInt(eval(s));
 //	} catch (e) {
-//		alert("err: " + orgs);
+//		alert("err: " + s);
 //		return null;
 //	}
 }
@@ -712,17 +707,16 @@ function pdat(ln,pc,align){
 		sz=1;
 		start=4;
 	}
-	
+
 	ln=ln.replace(/#/g,"0x").replace(/`/g,"0b")
 	const dlist=ln.slice(start).split(",")
 	let i,d,ret=[];
-	let adr=0;
 	const msk=Math.pow(2,8*sz)-1;
 	for(i=0;i<dlist.length;i++){
 		d=pint(dlist[i]);
 		ret.push(d&msk);
 	}
-				
+
 	const _ret = ret;
 	ret = [];
 
@@ -747,7 +741,7 @@ function pdat(ln,pc,align){
 			ret.push((_ret[i] >> 16) & 0xffff);
 		}
 	}
-	return ret
+	return ret;
 
 }
 
@@ -768,7 +762,6 @@ function assemble() {
 	const dom_src=document.getElementById("textarea1");
 	const dom_fmt=document.getElementById("selfmt");
 	const dom_hex=document.getElementById("textarea2");
-	const dom_err=document.getElementById("textarea3");
 	const dom_adr=document.getElementById("txtadr");
 	const dom_len=document.getElementById("uselineno");
 	const dom_lst=document.getElementById("linenostart");
@@ -776,10 +769,8 @@ function assemble() {
 	const fmt = dom_fmt.value;
 	const fm2b = fmt_dict[fmt];
 	let s = dom_src.value;
-	s = s.replace(/\/\*([^*]|\*[^\/])*\*\//g,"");
+	s = s.replace(/\/\*([^*]|\*[^/])*\*\//g,"");
 	const lines = s.split("\n");
-	let j,line,m,p,p1,p2;
-	let lno;
 	dom_hex.innerHTML=""
 	prgctr=pint(dom_adr.value);
 	const startadr = prgctr;
@@ -793,7 +784,7 @@ function assemble() {
 	const pats = [];
 	for (let i = 0; i < lines.length; i++) {
 		pats.push(curlist);
-		line = lines[i].toLowerCase().replace(/\s/g,"");
+		const line = lines[i].toLowerCase().replace(/\s/g,"");
 		lines[i] = line;
 
 		try {
@@ -820,7 +811,7 @@ function assemble() {
 					prgctr++;
 				}
 				const dlist = pdat(line2, prgctr, align);
-				for (j = 0; j < dlist.length; j++){
+				for (let j = 0; j < dlist.length; j++){
 					outlist.push([i, prgctr, dlist[j]]);
 					prgctr += 2;
 				}
@@ -889,7 +880,7 @@ function assemble() {
 				outlist.push([i,prgctr,EMPTYLINE]);
 				continue;
 			} else {
-				p = asmln(line, prgctr);
+				const p = asmln(line, prgctr);
 				
 				if (p != undefined) {
 					if (p.length + 1) {
@@ -912,10 +903,10 @@ function assemble() {
 	}
 	
 	for (let i = 0; i < outlist.length; i++){
-		lno = outlist[i][0];
-		prgctr = outlist[i][1];
-		p = outlist[i][2];
-		line = lines[lno].toLowerCase();
+		const lno = outlist[i][0];
+		const prgctr = outlist[i][1];
+		let p = outlist[i][2];
+		const line = lines[lno].toLowerCase();
 //		console.log(lines[i] + " " + prgctr + " " + p.toString(16));
 		
 		if (p >= NOTOPCODE) {

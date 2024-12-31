@@ -21,19 +21,17 @@ function zero2w(x){
 	return p;
 }
 function m2b16(lines,outlist,s,d){
-	let p,p0,p1;
-	let bas="",i,line,out,l,a,nln;
-	let skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
+	let bas="";
 	let lines2=[],linehex=[],lineadr=-1;
 
-	nln=0;
+	let nln=0;
 	
-	for(i=0; i<outlist.length; i++){
-		out=outlist[i];
-		l=out[0];
-		a=out[1];
-		p=out[2];
-		line=lines[l];
+	for(let i=0; i<outlist.length; i++){
+		const out=outlist[i];
+		const l=out[0];
+		const a=out[1];
+		const p=out[2];
+		const line=lines[l];
 
 		let flush = false;
 		if(p==EMPTYLINE){
@@ -44,8 +42,8 @@ function m2b16(lines,outlist,s,d){
 			if(lineadr<0){
 				lineadr=a;
 			}
-			p0=p&0x0ff;
-			p1=(p>>8)&0x0ff
+			let p0=p&0x0ff;
+			let p1=(p>>8)&0x0ff
 			p0=zero16(p0);
 			p1=zero16(p1);
 			linehex.push("#"+p0);
@@ -72,19 +70,17 @@ function m2b16(lines,outlist,s,d){
 	return bas;
 }
 function m2b10(lines,outlist,s,d){
-	let p,p0,p1;
-	let bas="",i,line,out,l,a,nln;
-	const skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
+	let bas="";
 	let lines2=[],linehex=[],lineadr=-1;
 
-	nln = 0;
+	let  nln = 0;
 	
-	for (i = 0; i < outlist.length; i++){
-		out=outlist[i];
-		l=out[0];
-		a=out[1];
-		p=out[2];
-		line=lines[l];
+	for (let i = 0; i < outlist.length; i++){
+		const out=outlist[i];
+		const l=out[0];
+		const a=out[1];
+		const p=out[2];
+		const line=lines[l];
 		
 		if (p==EMPTYLINE) {
 			continue;
@@ -96,8 +92,8 @@ function m2b10(lines,outlist,s,d){
 				if (lineadr < 0) {
 					lineadr = a;
 				}
-				p0 = p & 0x0ff;
-				p1 = (p >> 8) & 0x0ff
+				const p0 = p & 0x0ff;
+				const p1 = (p >> 8) & 0x0ff
 				linehex.push(p0.toString(10));
 				linehex.push(p1.toString(10));
 			} else {
@@ -125,7 +121,6 @@ function m2b10(lines,outlist,s,d){
 }
 function m2b2(lines, outlist,s,d){
 	let bas = "";
-	const skips = { undefined: true, LABEL: true, COMMENT: true, NOTOPCODE:true };
 	for (let i = 0; i < outlist.length; i++) {
 		const out = outlist[i];
 		const l = out[0];
@@ -148,16 +143,14 @@ function m2b2(lines, outlist,s,d){
 	return bas;
 }
 function m2bin(lines,outlist){
-	let p,p0,p1;
-	let bas="",i,line,out,l,a,nln;
-	const skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
+	let bas="";
 	let paddr=-1;
-	for(i=0; i<outlist.length; i++){
-		out=outlist[i];
-		l=out[0];
-		a=out[1];
-		p=out[2];
-		line=lines[l];
+	for(let i=0; i<outlist.length; i++){
+		const out=outlist[i];
+		const l=out[0];
+		const a=out[1];
+		const p=out[2];
+		const line=lines[l];
 
 		if(p==EMPTYLINE){
 			continue;
@@ -172,8 +165,8 @@ function m2bin(lines,outlist){
 				bas+="*** "+(a-paddr)+"-byte gap ***\n";
 				paddr=a;
 			}
-			p0=p&0x0ff;
-			p1=(p>>8)&0x0ff
+			let p0=p&0x0ff;
+			let p1=(p>>8)&0x0ff
 			p0=zero2(p0);
 			p1=zero2(p1);
 			bas+=""+p1+p0+"\n";
@@ -183,20 +176,17 @@ function m2bin(lines,outlist){
 	return bas;
 }
 function m2ar2(lines,outlist){
-	let p,p0,p1;
-	let bas="",i,line,out,l,a,nln;
-	const skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
-	let n = 0;
+	let bas="";
 	let minaddr = 0;
 	for (let i = 0; i < outlist.length; i++) {
 		if (i == 0 || outlist[i][1] < minaddr) minaddr = outlist[i][1];
 	}
 	for (let i = 0; i < outlist.length; i++) {
-		out=outlist[i];
-		l=out[0];
-		a=out[1];
-		p=out[2];
-		line=lines[l];
+		const out=outlist[i];
+		const l=out[0];
+		const a=out[1];
+		const p=out[2];
+		const line=lines[l];
 
 		if(p==EMPTYLINE){
 			continue;
@@ -205,7 +195,7 @@ function m2ar2(lines,outlist){
 			if ((a - minaddr) % 2 != 0) {
 				return "misalignment not supported in this format";
 			}
-			n = (a - minaddr) >> 1;
+			const n = (a - minaddr) >> 1;
 //			bas += "[" + n + "]=`" + zero2w(p) + "\n";// + " '" + line + "\n";
 			bas += "[" + n + "]=`" + zero2(p >> 8) + " " + zero2(p & 0xff) + " :'" + line + "\n";
 		}
@@ -213,10 +203,7 @@ function m2ar2(lines,outlist){
 	return bas;
 }
 function m2ar16(lines,outlist,s,d) {
-	let p,p0,p1;
-	let bas="",i,line,out,l,a;
-	const skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
-	let n = 0;
+	let bas="";
 	let linehex=[];
 	let lineaddr = -1;
 	let minaddr = 0;
@@ -227,11 +214,11 @@ function m2ar16(lines,outlist,s,d) {
 	const limit = 30;
 	let nln = 0;
 	for (let i = 0; i < outlist.length; i++) {
-		out=outlist[i];
-		l=out[0];
-		a=out[1];
-		p=out[2];
-		line=lines[l];
+		const out=outlist[i];
+		const l=out[0];
+		const a=out[1];
+		const p=out[2];
+		const line=lines[l];
 
 		if(p==EMPTYLINE) {
 			continue;
@@ -251,7 +238,7 @@ function m2ar16(lines,outlist,s,d) {
 				if ((lineaddr - minaddr) % 2 != 0) {
 					return "misalignment not supported in this format";
 				}
-				n = (lineaddr - minaddr) >> 1;
+				const n = (lineaddr - minaddr) >> 1;
 				bas += lno(s,d,nln) + "LET[" + n + "]," + linehex.join(",") + "\n";
 				nln++;
 				linehex = [];
@@ -263,31 +250,27 @@ function m2ar16(lines,outlist,s,d) {
 		if ((lineaddr - minaddr) % 2 != 0) {
 			return "misalignment not supported in this format";
 		}
-		n = (lineaddr - minaddr) >> 1;
+		const n = (lineaddr - minaddr) >> 1;
 		bas += lno(s,d,nln) + "LET[" + n + "]," + linehex.join(",") + "\n";
 	}
 	return bas;
 }
 function m2armin(lines,outlist,s,d) {
-	let p,p0,p1;
-	let bas="",i,line,out,l,a;
-	const skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
-	let n = 0;
+	let bas="";
 	let curline = "";
 	let curaddr = -1;
 	let minaddr = 0;
 	for (let i = 0; i < outlist.length; i++) {
 		if (i == 0 || outlist[i][1] < minaddr) minaddr = outlist[i][1];
 	}
-	
-	const limit = 30;
+
 	let nln = 0;
 	for (let i = 0; i < outlist.length; i++) {
-		out=outlist[i];
-		l=out[0];
-		a=out[1];
-		p=out[2];
-		line=lines[l];
+		const out=outlist[i];
+		const l=out[0];
+		const a=out[1];
+		const p=out[2];
+		const line=lines[l];
 
 		if(p==EMPTYLINE) {
 			continue;
@@ -297,7 +280,7 @@ function m2armin(lines,outlist,s,d) {
 				if ((a - minaddr) % 2 != 0) {
 					return "misalignment not supported in this format";
 				}
-				n = (a - minaddr) >> 1;
+				const n = (a - minaddr) >> 1;
 				curline = lno(s,d,nln) + "LET[" + n + "]";
 				nln++;
 				curaddr = a;
@@ -321,9 +304,7 @@ function m2armin(lines,outlist,s,d) {
 }
 // from http://tagiyasoft.blog.jp/asm15.js
 function m2js(lines,outlist){
-	let p,p0,p1;
-	let bas="",i,line,out,l,a;
-	const skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
+	let bas="";
 	let lines2=[],linehex=[],lineadr=-1;
 	let minaddr = 0;
 	for (let i = 0; i < outlist.length; i++) {
@@ -331,12 +312,12 @@ function m2js(lines,outlist){
 	}
 	let supaddr = minaddr;
 	
-	for(i=0; i<outlist.length; i++){
-		out=outlist[i];
-		l=out[0];
-		a=out[1];
-		p=out[2];
-		line=lines[l];
+	for(let i=0; i<outlist.length; i++){
+		const out=outlist[i];
+		const l=out[0];
+		const a=out[1];
+		const p=out[2];
+		const line=lines[l];
 
 		let flush=false;
 		if(p==EMPTYLINE){
@@ -347,8 +328,8 @@ function m2js(lines,outlist){
 			if(lineadr<0){
 				lineadr=a;
 			}
-			p0=p&0x0ff;
-			p1=(p>>8)&0x0ff
+			const p0=p&0x0ff;
+			const p1=(p>>8)&0x0ff
 			linehex.push(p0);
 			linehex.push(p1);
 		}else {
@@ -391,9 +372,7 @@ function m2js(lines,outlist){
 }
 // for C lang
 function m2c(lines,outlist){
-	let p,p0,p1;
-	let bas="",i,line,out,l,a;
-	const skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
+	let bas="";
 	let lines2=[],linehex=[],lineadr=-1;
 	let minaddr = 0;
 	for (let i = 0; i < outlist.length; i++) {
@@ -401,12 +380,12 @@ function m2c(lines,outlist){
 	}
 	let supaddr = minaddr;
 
-	for (i=0; i<outlist.length; i++){
-		out=outlist[i];
-		l=out[0];
-		a=out[1];
-		p=out[2];
-		line=lines[l];
+	for (let i=0; i<outlist.length; i++){
+		const out=outlist[i];
+		const l=out[0];
+		const a=out[1];
+		const p=out[2];
+		const line=lines[l];
 
 		let flush=false;
 		if(p==EMPTYLINE){
@@ -417,8 +396,8 @@ function m2c(lines,outlist){
 			if(lineadr<0){
 				lineadr=a;
 			}
-			p0=p&0x0ff;
-			p1=(p>>8)&0x0ff
+			const p0=p&0x0ff;
+			const p1=(p>>8)&0x0ff
 			linehex.push("0x" + zero16(p0));
 			linehex.push("0x" + zero16(p1));
 		}else {
@@ -449,18 +428,16 @@ function m2c(lines,outlist){
 
 // for hex file
 function m2hex(lines,outlist){
-	let p,p0,p1;
-	let bas="",i,line,out,l,a;
-	const skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
+	let bas="";
 	let lines2=[],linehex=[],lineadr=-1,highadr=0;
 	
 	let chk = 0;
-	for (i=0; i<outlist.length; i++){
-		out=outlist[i];
-		l=out[0];
-		a=out[1];
-		p=out[2];
-		line=lines[l];
+	for (let i=0; i<outlist.length; i++){
+		const out=outlist[i];
+		const l=out[0];
+		const a=out[1];
+		const p=out[2];
+		const line=lines[l];
 
 		let flush=false;
 		if(p==EMPTYLINE){
@@ -471,8 +448,8 @@ function m2hex(lines,outlist){
 			if(lineadr<0){
 				lineadr=a;
 			}
-			p0=p&0x0ff;
-			p1=(p>>8)&0x0ff
+			const p0=p&0x0ff;
+			const p1=(p>>8)&0x0ff
 			linehex.push(zero16(p0));
 			linehex.push(zero16(p1));
 			chk -= p0 + p1;
@@ -518,19 +495,17 @@ function m2hex(lines,outlist){
 
 // for mot file
 function m2mot(lines, outlist) {
-	let p,p0,p1;
-	let bas="",i,line,out,l,a;
-	const skips={undefined:true,LABEL:true,COMMENT:true,NOTOPCODE:true};
+	let bas="";
 	let lines2=[],linehex=[],lineadr=-1;
 	let startadr = -1;
 	
 	let chk = 0;
-	for (i = 0; i < outlist.length; i++) {
-		out=outlist[i];
-		l=out[0];
-		a=out[1];
-		p=out[2];
-		line=lines[l];
+	for (let i = 0; i < outlist.length; i++) {
+		const out=outlist[i];
+		const l=out[0];
+		const a=out[1];
+		const p=out[2];
+		const line=lines[l];
 
 		let flush=false;
 		if (p==EMPTYLINE) {
@@ -543,8 +518,8 @@ function m2mot(lines, outlist) {
 					startadr = a;
 				lineadr = a;
 			}
-			p0=p&0x0ff;
-			p1=(p>>8)&0x0ff
+			const p0=p&0x0ff;
+			const p1=(p>>8)&0x0ff
 			linehex.push(zero16(p0));
 			linehex.push(zero16(p1));
 			chk += p0 + p1;
