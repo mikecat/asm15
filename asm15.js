@@ -189,7 +189,7 @@ function n(bits, s, ofs, div, align4) {
 							ad += 2;
 						}
 					}
-					rel = ad >> div; // 0x0fffffffc -> 0x0fffffffe
+					var rel = ad >> div; // 0x0fffffffc -> 0x0fffffffe
 //					alert(lbl_dict[lbl].toString(16) + " " + pc.toString(16) + " " + div + " " + ((pc & 0x0fffffffe)) + " " + lbl + " " + rel);
 					if (rel > mx || rel < mn) {
 						throw new Error("too far");
@@ -819,7 +819,7 @@ function assemble() {
 				if (align && prgctr % 2 == 1) {
 					prgctr++;
 				}
-				dlist = pdat(line2, prgctr, align);
+				var dlist = pdat(line2, prgctr, align);
 				for (j = 0; j < dlist.length; j++){
 					outlist.push([i, prgctr, dlist[j]]);
 					prgctr += 2;
