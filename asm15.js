@@ -763,6 +763,7 @@ function assemble() {
 	dom_hex.innerHTML=""
 	prgctr=pint(dom_adr.value);
 	const startadr = prgctr;
+	const errors = [];
 
 	const orglines = [];
 	for (let i = 0; i < lines.length; i++) {
@@ -886,7 +887,7 @@ function assemble() {
 				}
 			}
 		} catch (e) {
-			alert("asm error in " + (i + 1) + "\n" + orglines[i] + "\n" + e);
+			errors.push("asm error in " + (i + 1) + "\n" + orglines[i] + "\n" + e);
 		}
 	}
 	
@@ -910,7 +911,7 @@ function assemble() {
 						outlist[i+j] = [ lno, prgctr+2*j, p[j] ];
 						
 						if (outlist[i+j][2] == YET) {
-							alert("label not found in " + (lno + 1) + "\n" + orglines[lno]);
+							errors.push("label not found in " + (lno + 1) + "\n" + orglines[lno]);
 						}
 					}
 					i += p.length - 1;
@@ -918,15 +919,16 @@ function assemble() {
 					outlist[i] = [ lno, prgctr, p ];
 					
 					if (outlist[i][2] == YET) {
-						alert("label not found in " + (lno + 1) + "\n" + orglines[lno]);
+						errors.push("label not found in " + (lno + 1) + "\n" + orglines[lno]);
 					}
 				}
 			} catch (e) {
-				alert("asm error in " + (lno + 1) + "\n" + orglines[lno] + "\n" + e);
+				errors.push("asm error in " + (lno + 1) + "\n" + orglines[lno] + "\n" + e);
 			}
 		}
 	}
 	//console.log(outlist);
+	if (errors.length > 0) alert(errors.join("\n\n"));
 	const linenoStart = dom_len.checked ? pint(dom_lst.value) : NaN;
 	const linenoDelta = dom_len.checked ? pint(dom_lde.value) : NaN;
 	const bas = fm2b(lines, outlist, linenoStart, linenoDelta);
