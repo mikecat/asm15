@@ -736,7 +736,7 @@ function pdat(ln,pc,align){
 
 }
 
-function assemble() {
+function assemble(s, fmt, options) {
 	lbl_dict = {};
 	//lbl_align4 = [];
 	const outlist = [];
@@ -748,20 +748,11 @@ function assemble() {
 	let curlist = lists["m0"];
 	cmdlist = curlist.cmdlist;
 	patlist = curlist.patlist;
-	const dom_src=document.getElementById("textarea1");
-	const dom_fmt=document.getElementById("selfmt");
-	const dom_hex=document.getElementById("textarea2");
-	const dom_adr=document.getElementById("txtadr");
-	const dom_len=document.getElementById("uselineno");
-	const dom_lst=document.getElementById("linenostart");
-	const dom_lde=document.getElementById("linenodelta");
-	const fmt = dom_fmt.value;
 	const fm2b = fmt_dict[fmt];
-	let s = dom_src.value;
 	s = s.replace(/\/\*([^*]|\*[^/])*\*\//g,"");
 	const lines = s.split("\n");
-	dom_hex.innerHTML=""
-	prgctr=pint(dom_adr.value);
+	prgctr = !options || typeof options.startAddress === "undefined" ? 0x700 :
+		typeof options.startAddress === "number" ? options.startAddress : pint(options.startAddress);
 	const startadr = prgctr;
 	const errors = [];
 
@@ -928,33 +919,20 @@ function assemble() {
 		}
 	}
 	//console.log(outlist);
-	if (errors.length > 0) alert(errors.join("\n\n"));
-	const linenoStart = dom_len.checked ? pint(dom_lst.value) : NaN;
-	const linenoDelta = dom_len.checked ? pint(dom_lde.value) : NaN;
-	const bas = fm2b(lines, outlist, linenoStart, linenoDelta);
-	dom_hex.value = bas;
-	binsize.textContent = getSize(lines, outlist);
-	if (dom_hex.textContent==bas)
-		return;
-	dom_hex.textContent = bas;
-	if (dom_hex.textContent==bas)
-		return;
-	dom_hex.innerText=bas;
-	if (dom_hex.innerText==bas)
-		return;
-	dom_hex.innerHTML=bas;
-	if (dom_hex.innerHTML==bas)
-		return;
-}
-
-function example() {
-	const dom_src = document.getElementById("textarea1");
-	const dom_ex = document.getElementById("selex");
-	const exname = dom_ex.value;
-	if (!exname) {
-		return false;
+	const useLineno = options && typeof options.useLineno !== "undefined" ? options.useLineno : true;
+	const linenoStart = !options || typeof options.linenoStart === "undefined" ? 10 :
+		typeof options.linenoStart === "number" ? options.linenoStart : pint(options.linenoStart);
+	const linenoDelta = !options || typeof options.linenoDelta === "undefined" ? 10 :
+		typeof options.linenoDelta === "number" ? options.linenoDelta : pint(options.linenoDelta);
+	let bas = "";
+	try {
+		bas = fm2b(lines, outlist, useLineno ? linenoStart : NaN, useLineno ? linenoDelta : NaN);
+	} catch (e) {
+		errors.push("" + e);
 	}
-	fetch("samples/" + exname + ".asm")
-		.then(res => res.text())
-		.then(text => dom_src.value = text);
+	return {
+		bas: bas,
+		size: getSize(lines, outlist),
+		errors: errors,
+	};
 }

@@ -5,6 +5,7 @@
 <script src="asm15constants.js"></script>
 <script src="asm15.js"></script>
 <script src="asm15output.js"></script>
+<script src="asm15ui.js"></script>
 <!--<script src="asm15_example.js"></script>-->
 <style>
 body {
@@ -38,7 +39,7 @@ li {
 <textarea id="textarea1" style="width:80%;height:30em;word-break: break-all;">
 </textarea>
 </div>
-<input id="submit-button" value="assemble" type="button" onclick="assemble();">
+<input id="submit-button" value="assemble" type="button" onclick="run_assemble();">
 <script>
 window.onload = function() {
 	var hash = document.location.hash;
@@ -47,13 +48,13 @@ window.onload = function() {
 		document.getElementById("selex").value = hash;
 		example();
 	}
-	assemble();
+	run_assemble();
 };
 </script>
 
 <h3>BIN</h3>
 
-<select name="selfmt" id="selfmt" onchange="assemble();">
+<select name="selfmt" id="selfmt" onchange="run_assemble();">
 				<option value="bas10">bas (dec)</option>
 				<option value="bas2">bas (bin)</option>
 				<option value="bas16">bas (hex)</option>
