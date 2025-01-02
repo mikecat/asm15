@@ -736,12 +736,10 @@ function pdat(ln,pc,align){
 
 }
 
-let bas = "";
-let outlist = [];
 function assemble() {
 	lbl_dict = {};
 	//lbl_align4 = [];
-	outlist = [];
+	const outlist = [];
 	let prgctr = 0;
 	const lists = {
 		"m0": {"cmdlist": cmdlist_m0, "patlist": patlist_m0},
@@ -765,7 +763,6 @@ function assemble() {
 	dom_hex.innerHTML=""
 	prgctr=pint(dom_adr.value);
 	const startadr = prgctr;
-	bas="";
 
 	const orglines = [];
 	for (let i = 0; i < lines.length; i++) {
@@ -932,7 +929,7 @@ function assemble() {
 	//console.log(outlist);
 	const linenoStart = dom_len.checked ? pint(dom_lst.value) : NaN;
 	const linenoDelta = dom_len.checked ? pint(dom_lde.value) : NaN;
-	bas = fm2b(lines, outlist, linenoStart, linenoDelta);
+	const bas = fm2b(lines, outlist, linenoStart, linenoDelta);
 	dom_hex.value = bas;
 	binsize.textContent = getSize(lines, outlist);
 	if (dom_hex.textContent==bas)
