@@ -1,14 +1,5 @@
 "use strict";
 
-//GLOBAL
-const NOTOPCODE = 0x100000000 + 0;
-const YET       = 0x100000000 + 1;
-const COMMENT   = 0x100000000 + 2;
-const EMPTYLINE = 0x100000000 + 3;
-const ASMERR    = 0x100000000 + 4;
-const LABEL     = 0x100000000 + 5;
-const DIRECTIVE = 0x100000000 + 6;
-
 let lbl_dict = {};
 // let lbl_align4 = [];
 
