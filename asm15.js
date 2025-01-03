@@ -807,9 +807,29 @@ function checksum_crc32(bytes) {
 	return [crc & 0xffff, crc >>> 16];
 }
 
+const crc32mpeg2magic = 0x04c11db7;
+const crc32mpeg2table = [];
+function checksum_crc32mpeg2(bytes) {
+	if (crc32mpeg2table.length === 0) {
+		for (let i = 0; i < 256; i++) {
+			let value = i << 24;
+			for (let j = 0; j < 8; j++) {
+				value = (value << 1) ^ (value & 0x80000000 ? crc32mpeg2magic : 0);
+			}
+			crc32mpeg2table.push(value);
+		}
+	}
+	let crc = 0xffffffff;
+	for (let i = 0; i < bytes.length; i++) {
+		crc = crc32mpeg2table[((crc >>> 24) ^ bytes[i]) & 0xff] ^ (crc << 8);
+	}
+	return [crc & 0xffff, crc >>> 16];
+}
+
 const checksum_dict = {
 	"lsum2comp": { "func": checksum_lsum2comp, "size": 4 },
 	"crc32": { "func": checksum_crc32, "size": 4 },
+	"crc32mpeg2": { "func": checksum_crc32mpeg2, "size": 4 },
 };
 
 function assemble(s, fmt, options) {
