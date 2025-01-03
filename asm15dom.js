@@ -17,8 +17,29 @@ function run_assemble() {
 	});
 	if (result.errors.length > 0) alert(result.errors.join("\n\n"));
 	const bas = result.bas;
-	dom_hex.value = bas;
+	if (bas instanceof ArrayBuffer) {
+		const basView = new Uint8Array(bas);
+		let hexdumped = "";
+		for (let i = 0; i < basView.length; i += 16) {
+			const address = "0000000" + i.toString(16);
+			hexdumped += address.substring(address.length - 8) + " ";
+			let hexs = "", chars = "";
+			for (let j = 0; j < 16 && i + j < basView.length; j++) {
+				const v = basView[i + j];
+				const hex = "0" + v.toString(16);
+				hexs += " " + hex.substring(hex.length - 2);
+				chars += 0x20 <= v && v < 0x7f ? String.fromCharCode(v) : ".";
+			}
+			hexdumped += hexs;
+			for (let i = hexs.length; i < 3 * 16; i += 3) hexdumped += "   ";
+			hexdumped += "  |" + chars + "|\n";
+		}
+		dom_hex.value = hexdumped;
+	} else {
+		dom_hex.value = bas;
+	}
 	binsize.textContent = result.size;
+	/*
 	if (dom_hex.textContent==bas)
 		return;
 	dom_hex.textContent = bas;
@@ -30,6 +51,7 @@ function run_assemble() {
 	dom_hex.innerHTML=bas;
 	if (dom_hex.innerHTML==bas)
 		return;
+	*/
 }
 
 function example() {

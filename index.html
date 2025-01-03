@@ -67,6 +67,7 @@ window.onload = function() {
 				<option value="c">for C language</option>
 				<option value="hex">hex file</option>
 				<option value="mot">mot file</option>
+				<option value="uf2">uf2 file</option>
 </select>
 　　　　　start address <input name="txtadr" id="txtadr" value="0x700">
 　　　　　<label for="uselineno"><input type="checkbox" name="uselineno" id="uselineno" checked> line no.</label>
@@ -116,6 +117,16 @@ Iは命令用(命令セットがM0の時、LSBを1にする)、Dはデータ用�
 <dt>SPACE 増分[, 埋める値]</dt>
 <dd>出力位置(アドレス)を指定した「増分」バイト進める。
 「埋める値」を指定した場合、出力位置が条件を満たすまでその値(2バイト)で埋める。</dd>
+<dt>UF2FAMILY 値</dt>
+<dd>uf2 形式での出力時、以降のデータを family ID を指定の値に設定したブロックに出力する。</dd>
+<dt>UF2FAMILY NONE</dt>
+<dd>uf2 形式での出力時、以降のデータを family ID を設定していないブロックに出力する。</dd>
+<dt>UF2BLOCK ブロックサイズ[, セクタサイズ], 埋める値</dt>
+<dd>uf2 形式での出力時、以降のデータを指定サイズのブロック単位で出力する。値が未定義のバイトは「埋める値」を出力する。<br>
+セクタサイズを指定した場合、各セクタのデータが揃うよう、必要に応じて空ブロックを出力する。<br>
+ブロックサイズ・セクタサイズともにバイト数で指定する。セクタサイズはブロックサイズの整数倍でなければならない。</dd>
+<dt>UF2BLOCK NONE</dt>
+<dd>uf2 形式での出力時、以降のデータをバイト単位で出力する。</dd>
 </dl>
 </div>
 

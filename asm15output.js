@@ -565,8 +565,165 @@ function m2mot(lines, outlist) {
 	return bas;
 }
 
+function m2uf2(lines, outlist) {
+	// データをUF2の設定ごとに分割する
+	const groups = [];
+	const defaultBlock = { "blockSize": 1, "sectorSize": 1, "defaultByte": 0xff };
+	let family = null, block = defaultBlock, outs = [];
+	for (let i = 0; i <= outlist.length; i++) {
+		const out = i < outlist.length ? outlist[i] : [0, 0, DIRECTIVE, { "uf2family": null }];
+		const p = out[2];
+		const d = out[3];
+		if (p === DIRECTIVE && d && ("uf2family" in d || "uf2block" in d)) {
+			// 出力アドレスの昇順にソートする (同じアドレスの場合、行番号の昇順)
+			outs.sort(function(a, b) {
+				if (a[1] !== b[1]) return a[1] < b[1] ? -1 : 1;
+				if (a[0] < b[0]) return -1;
+				if (a[0] > b[0]) return 1;
+				return 0;
+			});
+			groups.push({
+				"family": family,
+				"block": block,
+				"outs": outs,
+			});
+			if ("uf2family" in d) family = d.uf2family;
+			if ("uf2block" in d) block = d.uf2block || defaultBlock;
+			outs = [];
+		} else {
+			outs.push(out);
+		}
+	}
+
+	// 分割した各グループを処理する
+	const uf2Blocks = [];
+	for (let i = 0; i < groups.length; i++) {
+		const group = groups[i];
+		// ワード列をバイト列に分解する
+		const bytes = [];
+		for (let j = 0; j < group.outs.length; j++) {
+			if (group.outs[j][2] < NOTOPCODE) {
+				// データが重なった場合、最後のものを採用する
+				while (bytes.length > 0 && bytes[bytes.length - 1].addr >= group.outs[j][1]) {
+					bytes.pop();
+				}
+				bytes.push({ "addr": group.outs[j][1], "value": group.outs[j][2] & 0xff });
+				bytes.push({ "addr": group.outs[j][1] + 1, "value": (group.outs[j][2] >> 8) & 0xff });
+			}
+		}
+		if (bytes.length === 0) continue;
+		// バイト列をブロックにまとめる
+		const blocks = [];
+		let currentBlock = [];
+		let currentBlockStart = bytes[0].addr - bytes[0].addr % group.block.blockSize;
+		for (let j = 0; j < bytes.length; j++) {
+			while (currentBlock.length < group.block.blockSize && currentBlock.length < bytes[j].addr - currentBlockStart) {
+				currentBlock.push(group.block.defaultByte);
+			}
+			if (currentBlock.length >= group.block.blockSize) {
+				blocks.push({
+					"addr": currentBlockStart,
+					"bytes": currentBlock,
+				});
+				currentBlock = [];
+				currentBlockStart = bytes[j].addr - bytes[j].addr % group.block.blockSize;
+			}
+			currentBlock.push(bytes[j].value);
+		}
+		if (currentBlock.length > 0) {
+			while (currentBlock.length < group.block.blockSize) {
+				currentBlock.push(group.block.defaultByte);
+			}
+			blocks.push({
+				"addr": currentBlockStart,
+				"bytes": currentBlock,
+			});
+		}
+		// セクターを考慮してブロック列にブロックを足す
+		const emptyBytes = [];
+		for (let j = 0; j < group.block.blockSize; j++) emptyBytes.push(group.block.defaultByte);
+		const blocksInSectors = [];
+		for (let j = 0; j < blocks.length; ) {
+			const sectorStart = blocks[j].addr - blocks[j].addr % group.block.sectorSize;
+			let currentAddress = sectorStart;
+			while (currentAddress < sectorStart + group.block.sectorSize) {
+				if (j < blocks.length && blocks[j].addr === currentAddress) {
+					blocksInSectors.push(blocks[j]);
+					j++;
+				} else {
+					blocksInSectors.push({
+						"addr": currentAddress,
+						"bytes": emptyBytes,
+					});
+				}
+				currentAddress += group.block.blockSize;
+			}
+		}
+		// ブロック列をUF2ファイルのブロックに詰める
+		const MAX_PAYLOAD_SIZE = 476;
+		if (group.block.blockSize <= MAX_PAYLOAD_SIZE) {
+			// ブロックは1枠に収まる
+			let payload = [];
+			let payloadAddress = blocksInSectors[0].addr;
+			for (let j = 0; j < blocksInSectors.length; j++) {
+				if (payload.length + blocksInSectors[j].bytes.length > MAX_PAYLOAD_SIZE || payloadAddress + payload.length !== blocksInSectors[j].addr) {
+					uf2Blocks.push({
+						"family": group.family,
+						"addr": payloadAddress,
+						"bytes": payload,
+					});
+					payload = [];
+					payloadAddress = blocksInSectors[j].addr;
+				}
+				payload = payload.concat(blocksInSectors[j].bytes);
+			}
+			if (payload.length > 0) {
+				uf2Blocks.push({
+					"family": group.family,
+					"addr": payloadAddress,
+					"bytes": payload,
+				});
+			}
+		} else {
+			// 1ブロックを格納するのに複数の枠を使う
+			for (let j = 0; j < blocksInSectors.length; j++) {
+				for (let k = 0; k < blocksInSectors[j].bytes.length; k += MAX_PAYLOAD_SIZE) {
+					uf2Blocks.push({
+						"family": group.family,
+						"addr": blocksInSectors[j].addr + k,
+						"bytes": blocksInSectors[j].bytes.slice(k, k + MAX_PAYLOAD_SIZE),
+					});
+				}
+			}
+		}
+	}
+
+	// 得られたブロック群を、UF2の仕様に沿ったデータに変換する
+	// ArrayBuffer の要素の初期値は 0 であり、これはデータ領域の余りを 0 で埋めるというUF2の仕様に合う
+	const result = new ArrayBuffer(512 * uf2Blocks.length);
+	const resultView = new DataView(result);
+	for (let i = 0; i < uf2Blocks.length; i++) {
+		const block = uf2Blocks[i];
+		const offset = 512 * i;
+		resultView.setUint32(offset + 0, 0x0a324655, true);
+		resultView.setUint32(offset + 4, 0x9e5d5157, true);
+		resultView.setUint32(offset + 8, block.family !== null ? 0x00002000 : 0, true);
+		resultView.setUint32(offset + 12, block.addr, true);
+		resultView.setUint32(offset + 16, block.bytes.length, true);
+		resultView.setUint32(offset + 20, i, true);
+		resultView.setUint32(offset + 24, uf2Blocks.length, true);
+		resultView.setUint32(offset + 28, block.family || 0, true);
+		for (let j = 0; j < block.bytes.length; j++) {
+			resultView.setUint8(offset + 32 + j, block.bytes[j]);
+		}
+		resultView.setUint32(offset + 508, 0x0ab16f30, true);
+	}
+
+	return result;
+}
+
 const fmt_dict = {
-	"bas2": m2b2, "bas16": m2b16, "bas10": m2b10, "basar2": m2ar2, "basar16": m2ar16, "basarmin": m2armin, "bin": m2bin, "latte": m2js, "c": m2c, "hex": m2hex, "mot": m2mot
+	"bas2": m2b2, "bas16": m2b16, "bas10": m2b10, "basar2": m2ar2, "basar16": m2ar16, "basarmin": m2armin, "bin": m2bin, "latte": m2js, "c": m2c, "hex": m2hex, "mot": m2mot, "uf2": m2uf2
 };
 
 if (typeof module !== "undefined") {

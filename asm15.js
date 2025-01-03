@@ -953,6 +953,30 @@ function assemble(s, fmt, options) {
 					outlist.push([i,prgctr,CHECKSUM]);
 					prgctr += 2;
 				}
+			} else if (line.slice(0,9) == "uf2family") {
+				const family = cutComment(line.substr(9));
+				outlist.push([i,prgctr,DIRECTIVE,{"uf2family": family === "none" ? null : pint(family)}]);
+			} else if (line.slice(0,8) == "uf2block") {
+				const args = cutComment(line.substr(8));
+				if (args === "none") {
+					outlist.push([i,prgctr,DIRECTIVE,{"uf2block": null}]);
+				} else {
+					const parts = args.split(/,/);
+					if (parts.length !== 2 && parts.length !== 3) {
+						throw new Error("invalid number of arguments");
+					}
+					const blockSize = pint(parts[0]);
+					const sectorSize = parts.length === 3 ? pint(parts[1]) : blockSize;
+					if (blockSize <= 0 || sectorSize % blockSize !== 0) {
+						throw new Error("invalid block/sector size");
+					}
+					const defaultByte = pint(parts[parts.length === 3 ? 2 : 1]) & 0xff;
+					outlist.push([i,prgctr,DIRECTIVE,{"uf2block": {
+						"blockSize": blockSize,
+						"sectorSize": sectorSize,
+						"defaultByte": defaultByte,
+					}}]);
+				}
 			} else if (line == "") {
 				outlist.push([i,prgctr,EMPTYLINE]);
 				continue;
