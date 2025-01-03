@@ -686,8 +686,12 @@ function pint(s) {
 		if (n >= 0) {
 			s = s.substring(0, n);
 		}
-		const s_orig = s;
+		//const s_orig = s;
 		s = s.replace(/#/g,"0x").replace(/`/g,"0b");
+		return parseInt(eval(s));
+		// eval を用いることで 1+2 などの式にも対応できるが、
+		// 自前のパースでは式への対応は難しい
+		/*
 		let mult = 1;
 		if (s.substring (0, 1) === "+") {
 			s = s.substring(1);
@@ -715,6 +719,7 @@ function pint(s) {
 			throw new Error("invalid number: " + s_orig);
 		}
 		return parseInt(s, radix) * mult;
+		*/
 //	} catch (e) {
 //		alert("err: " + s);
 //		return null;
