@@ -145,6 +145,6 @@ options:
 			await writeToStream(process.stderr, result.errors.join("\n\n") + "\n");
 			process.exitCode = 1;
 		}
-		await writeToStream(outputStream, result.bas);
+		await writeToStream(outputStream, result.bas instanceof ArrayBuffer ? new Uint8Array(result.bas) : result.bas);
 	}
 })();
