@@ -742,6 +742,44 @@ function pdat(ln,pc,align){
 
 }
 
+function checksum_lsum2comp(bytes) {
+	if (bytes.length % 4 !== 0) {
+		throw new Error("length must be multiple of 4 for this type of checksum");
+	}
+	let sum = 0;
+	for (let i = 0; i < bytes.length; i += 4) {
+		const delta = bytes[i] | (bytes[i + 1] << 8) | (bytes[i + 2] << 16) | (bytes[i + 3] << 24);
+		sum = (sum + delta) >>> 0;
+	}
+	const checksum = -sum;
+	return [checksum & 0xffff, checksum >>> 16];
+}
+
+const crc32magic = 0xedb88320;
+const crc32table = [];
+function checksum_crc32(bytes) {
+	if (crc32table.length === 0) {
+		for (let i = 0; i < 256; i++) {
+			let value = i;
+			for (let j = 0; j < 8; j++) {
+				value = (value >>> 1) ^ (value & 1 ? crc32magic : 0);
+			}
+			crc32table.push(value);
+		}
+	}
+	let crc = 0xffffffff;
+	for (let i = 0; i < bytes.length; i++) {
+		crc = crc32table[(crc ^ bytes[i]) & 0xff] ^ (crc >>> 8);
+	}
+	crc = ~crc;
+	return [crc & 0xffff, crc >>> 16];
+}
+
+const checksum_dict = {
+	"lsum2comp": { "func": checksum_lsum2comp, "size": 4 },
+	"crc32": { "func": checksum_crc32, "size": 4 },
+};
+
 function assemble(s, fmt, options) {
 	lbl_dict = {};
 	//lbl_align4 = [];
@@ -862,6 +900,27 @@ function assemble(s, fmt, options) {
 					prgctr = new_prgctr;
 				}
 				continue;
+			} else if (line.slice(0,8) == "checksum") {
+				const is_r = line.substr(8,1) == "r";
+				const parts = cutComment(line.substr(is_r ? 9 : 8)).split(/,/);
+				if (!(parts[2] in checksum_dict)) {
+					throw new Error("unknown kind: " + parts[2]);
+				}
+				const start = pint(parts[0]) + (is_r ? startadr : 0);
+				const length = pint(parts[1]);
+				const kind = checksum_dict[parts[2]];
+				const defaultByte = parts.length >= 4 ? pint(parts[3]) : null;
+				outlist.push([i,prgctr,CHECKSUM,{
+					"start": start,
+					"length": length,
+					"func": kind.func,
+					"defaultByte": defaultByte,
+				}]);
+				prgctr += 2;
+				for (let j = 2; j < kind.size; j += 2) {
+					outlist.push([i,prgctr,CHECKSUM]);
+					prgctr += 2;
+				}
 			} else if (line == "") {
 				outlist.push([i,prgctr,EMPTYLINE]);
 				continue;
@@ -919,6 +978,44 @@ function assemble(s, fmt, options) {
 						errors.push("label not found in " + (lno + 1) + "\n" + orglines[lno]);
 					}
 				}
+			} catch (e) {
+				errors.push("asm error in " + (lno + 1) + "\n" + orglines[lno] + "\n" + e);
+			}
+		}
+	}
+	const assembledData = new Map();
+	for (let i = 0; i < outlist.length; i++) {
+		const prgctr = outlist[i][1];
+		const p = outlist[i][2];
+		if (p < NOTOPCODE) {
+			assembledData.set(prgctr, p & 0xff);
+			assembledData.set(prgctr + 1, (p >> 8) & 0xff);
+		}
+	}
+	for (let i = 0; i < outlist.length; i++) {
+		const lno = outlist[i][0];
+		const prgctr = outlist[i][1];
+		const p = outlist[i][2];
+		const params = outlist[i][3];
+		if (p === CHECKSUM && params) {
+			try {
+				const bytes = [];
+				for (let j = 0; j < params.length; j++) {
+					const addr = params.start + j;
+					const byte = assembledData.get(addr);
+					if (typeof byte === "number") {
+						bytes.push(byte);
+					} else if (params.defaultByte !== null) {
+						bytes.push(params.defaultByte & 0xff);
+					} else {
+						throw new Error("value undefined at #" + addr.toString(16) + " and default value isn't provided");
+					}
+				}
+				const checksum = params.func(bytes);
+				for (let j = 0; j < checksum.length; j++) {
+					outlist[i + j] = [lno, prgctr + 2 * j, checksum[j]];
+				}
+				i += checksum.length - 1;
 			} catch (e) {
 				errors.push("asm error in " + (lno + 1) + "\n" + orglines[lno] + "\n" + e);
 			}
