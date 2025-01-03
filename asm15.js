@@ -686,8 +686,28 @@ function pint(s) {
 		if (n >= 0) {
 			s = s.substring(0, n);
 		}
-		s = s.replace(/#/g,"0x").replace(/`/g,"0b")
-		return parseInt(eval(s));
+		const s_orig = s;
+		s = s.replace(/#/g,"0x").replace(/`/g,"0b");
+		let radix = 10;
+		if (s.substring(0, 2) === "0x") {
+			s = s.substring(2);
+			radix = 16;
+		} else if (s.substring(0, 2) === "0b") {
+			s = s.substring(2);
+			radix = 2;
+		} else if (s.substring(0, 2) === "0o") {
+			s = s.substring(2);
+			radix = 8;
+		} else if (s.substring(0, 1) === "0" && s !== "0") {
+			s = s.substring(1);
+			radix = /[89]/.test(s) ? 10 : 8;
+		}
+		// 区切りの _ を消去する (先頭・末尾・連続は不可)
+		s = s.replace(/(?<=[^_])_(?=[^_])/g, "");
+		if (!new RegExp("^[" + "0123456789abcdef".substring(0, radix) + "]+$").test(s)) {
+			throw new Error("invalid number: " + s_orig);
+		}
+		return parseInt(s, radix);
 //	} catch (e) {
 //		alert("err: " + s);
 //		return null;
