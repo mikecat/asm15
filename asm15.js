@@ -688,6 +688,13 @@ function pint(s) {
 		}
 		const s_orig = s;
 		s = s.replace(/#/g,"0x").replace(/`/g,"0b");
+		let mult = 1;
+		if (s.substring (0, 1) === "+") {
+			s = s.substring(1);
+		} else if (s.substring(0, 1) === "-") {
+			s = s.substring(1);
+			mult = -1;
+		}
 		let radix = 10;
 		if (s.substring(0, 2) === "0x") {
 			s = s.substring(2);
@@ -707,7 +714,7 @@ function pint(s) {
 		if (!new RegExp("^[" + "0123456789abcdef".substring(0, radix) + "]+$").test(s)) {
 			throw new Error("invalid number: " + s_orig);
 		}
-		return parseInt(s, radix);
+		return parseInt(s, radix) * mult;
 //	} catch (e) {
 //		alert("err: " + s);
 //		return null;
