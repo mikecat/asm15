@@ -824,7 +824,7 @@ function assemble(s, fmt, options) {
 	let curlist = lists["m0"];
 	cmdlist = curlist.cmdlist;
 	patlist = curlist.patlist;
-	const fm2b = my_fmt_dict[fmt];
+	const fm2b = my_fmt_dict[fmt].func;
 	s = s.replace(/\/\*([^*]|\*[^/])*\*\//g,"");
 	const lines = s.split("\n");
 	prgctr = !options || typeof options.startAddress === "undefined" ? 0x700 :

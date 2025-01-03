@@ -723,7 +723,18 @@ function m2uf2(lines, outlist) {
 }
 
 const fmt_dict = {
-	"bas2": m2b2, "bas16": m2b16, "bas10": m2b10, "basar2": m2ar2, "basar16": m2ar16, "basarmin": m2armin, "bin": m2bin, "latte": m2js, "c": m2c, "hex": m2hex, "mot": m2mot, "uf2": m2uf2
+	"bas2": {"func": m2b2, "ext": "txt"},
+	"bas16": {"func": m2b16, "ext": "txt"},
+	"bas10": {"func": m2b10, "ext": "txt"},
+	"basar2": {"func": m2ar2, "ext": "txt"},
+	"basar16": {"func": m2ar16, "ext": "txt"},
+	"basarmin": {"func": m2armin, "ext": "txt"},
+	"bin": {"func": m2bin, "ext": "txt"},
+	"latte": {"func": m2js, "ext": "js"},
+	"c": {"func": m2c, "ext": "c"},
+	"hex": {"func": m2hex, "ext": "hex"},
+	"mot": {"func": m2mot, "ext": "mot"},
+	"uf2": {"func": m2uf2, "ext": "uf2"},
 };
 
 if (typeof module !== "undefined") {

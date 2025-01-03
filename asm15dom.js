@@ -17,6 +17,7 @@ function run_assemble() {
 	});
 	if (result.errors.length > 0) alert(result.errors.join("\n\n"));
 	const bas = result.bas;
+	let resultData = null;
 	if (bas instanceof ArrayBuffer) {
 		const basView = new Uint8Array(bas);
 		let hexdumped = "";
@@ -35,10 +36,15 @@ function run_assemble() {
 			hexdumped += "  |" + chars + "|\n";
 		}
 		dom_hex.value = hexdumped;
+		resultData = bas;
 	} else {
 		dom_hex.value = bas;
+		resultData = new TextEncoder().encode(bas);
 	}
 	binsize.textContent = result.size;
+	URL.revokeObjectURL(downloadlink.href);
+	downloadlink.href = URL.createObjectURL(new Blob([resultData]));
+	downloadlink.setAttribute("download", "result." + fmt_dict[dom_fmt.value].ext);
 	/*
 	if (dom_hex.textContent==bas)
 		return;
