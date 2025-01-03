@@ -1,5 +1,11 @@
 "use strict";
 
+if (typeof NOTOPCODE === "undefined" && typeof require !== "undefined") {
+	require("./asm15constants.js");
+}
+
+const my_fmt_dict = typeof fmt_dict !== "undefined" ? fmt_dict : require("./asm15output.js").fmt_dict;
+
 let lbl_dict = {};
 // let lbl_align4 = [];
 
@@ -748,7 +754,7 @@ function assemble(s, fmt, options) {
 	let curlist = lists["m0"];
 	cmdlist = curlist.cmdlist;
 	patlist = curlist.patlist;
-	const fm2b = fmt_dict[fmt];
+	const fm2b = my_fmt_dict[fmt];
 	s = s.replace(/\/\*([^*]|\*[^/])*\*\//g,"");
 	const lines = s.split("\n");
 	prgctr = !options || typeof options.startAddress === "undefined" ? 0x700 :
@@ -934,5 +940,11 @@ function assemble(s, fmt, options) {
 		bas: bas,
 		size: getSize(lines, outlist),
 		errors: errors,
+	};
+}
+
+if (typeof module !== "undefined") {
+	module.exports = {
+		assemble,
 	};
 }

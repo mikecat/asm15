@@ -1,5 +1,9 @@
 "use strict";
 
+if (typeof NOTOPCODE === "undefined" && typeof require !== "undefined") {
+	require("./asm15constants.js");
+}
+
 function lno(start,delta,cnt) {
 	if (isNaN(start) || isNaN(delta)) return "";
 	return (start + delta * cnt).toString(10) + " ";
@@ -564,3 +568,9 @@ function m2mot(lines, outlist) {
 const fmt_dict = {
 	"bas2": m2b2, "bas16": m2b16, "bas10": m2b10, "basar2": m2ar2, "basar16": m2ar16, "basarmin": m2armin, "bin": m2bin, "latte": m2js, "c": m2c, "hex": m2hex, "mot": m2mot
 };
+
+if (typeof module !== "undefined") {
+	module.exports = {
+		fmt_dict,
+	};
+}
