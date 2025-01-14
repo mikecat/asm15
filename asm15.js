@@ -727,7 +727,7 @@ function pint(s) {
 }
 
 function pdat(ln,pc){
-	const insnInfo = /^(u?)\s*d\s*a\s*t\s*a\s*([bwl]?)/i.exec(ln);
+	const insnInfo = /^\s*(u?)\s*d\s*a\s*t\s*a\s*([bwl]?)/i.exec(ln);
 	if (!insnInfo) throw new Error("invalid instruction");
 	const align = insnInfo[1].toLowerCase() === "u";
 	const dtype = insnInfo[2].toLowerCase();
