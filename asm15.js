@@ -726,24 +726,35 @@ function pint(s) {
 //	}
 }
 
-function pdat(ln,pc,align){
-	let dtype=ln.charAt(4),start;
-	let sz,sz_dict={"b":1,"w":2,"l":4};
-	if (dtype in sz_dict){
-		sz=sz_dict[dtype];
-		start=5;
-	}else{
-		sz=1;
-		start=4;
-	}
+function pdat(ln,pc){
+	const insnInfo = /^(u?)\s*d\s*a\s*t\s*a\s*([bwl]?)/i.exec(ln);
+	if (!insnInfo) throw new Error("invalid instruction");
+	const align = insnInfo[1].toLowerCase() === "u";
+	const dtype = insnInfo[2].toLowerCase();
+	const sz_dict={"b":1,"w":2,"l":4};
+	const sz = dtype in sz_dict ? sz_dict[dtype] : 1;
 
-	ln=ln.replace(/#/g,"0x").replace(/`/g,"0b")
-	const dlist=ln.slice(start).split(",")
 	let i,d,ret=[];
 	const msk=Math.pow(2,8*sz)-1;
-	for(i=0;i<dlist.length;i++){
-		d=pint(dlist[i]);
-		ret.push(d&msk);
+	let start = insnInfo[0].length, strMode = false;
+	for (i = start; i <= ln.length; i++) {
+		if (i >= ln.length || (!strMode && (ln.charAt(i) === "," || ln.charAt(i) === "'"))) {
+			const part = ln.substring(start, i);
+			if (part.replace(/^\s*/, "").charAt(0) === "\"") {
+				const str = JSON.parse(part);
+				if (typeof str !== "string") throw new Error("invalid data");
+				new TextEncoder().encode(str).forEach((d) => ret.push(d & msk));
+			} else {
+				d = pint(part.replace(/\s/g, ""));
+				ret.push(d & msk);
+			}
+			start = i + 1;
+			if (ln.charAt(i) === "'") break; // この後はコメントなので終了
+		} else if (strMode && ln.charAt(i) === "\\") {
+			i++; // エスケープシーケンス \" が文字列の終わりと誤認識されるのを防ぐ
+		} else if (ln.charAt(i) === "\"") {
+			strMode = !strMode;
+		}
 	}
 
 	const _ret = ret;
@@ -882,11 +893,10 @@ function assemble(s, fmt, options) {
 				continue;
 			} else if (line.slice(0,4) == "data" || line.slice(0,5) == "udata") {
 				const align = line.charAt(0) != "u";
-				const line2 = align ? line : line.substr(1);
 				if (align && prgctr % 2 == 1) {
 					prgctr++;
 				}
-				const dlist = pdat(line2, prgctr, align);
+				const dlist = pdat(orglines[i], prgctr);
 				for (let j = 0; j < dlist.length; j++){
 					outlist.push([i, prgctr, dlist[j]]);
 					prgctr += 2;
